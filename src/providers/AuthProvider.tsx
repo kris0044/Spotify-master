@@ -27,6 +27,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           try {
             await checkAdminStatus();
             console.log("✅ Admin check completed");
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             console.log("ℹ️ Admin check failed (user not admin)");
           }
