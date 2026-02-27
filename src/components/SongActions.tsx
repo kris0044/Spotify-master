@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Plus, Check } from "lucide-react";
+import { Heart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavoriteStore } from "@/stores/useFavoriteStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
