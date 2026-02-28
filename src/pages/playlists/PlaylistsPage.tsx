@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Trash2, Edit2 } from "lucide-react";
+import { Plus, Music, Trash2 } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
