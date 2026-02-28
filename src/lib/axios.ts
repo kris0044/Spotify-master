@@ -2,7 +2,6 @@ import axios from "axios";
 
 export const axiosInstance = axios.create({
   baseURL: "https://spotify-master-backend-9di9.onrender.com/api",
-  withCredentials: true,
 });
 
 // Store the token getter function
