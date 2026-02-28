@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-	baseURL: import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api",
+	baseURL: import.meta.env.MODE === "development" ? "https://spotify-master-backend-9di9.onrender.com/api" : "/api",
 	// baseURL: import.meta.env.MODE === "development" ? "https://spotify-master-backend-9di9.onrender.com/api" : "/api",
 	withCredentials: true,
 });
