@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useArtistStore } from "@/stores/useArtistStore";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Album, Upload, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Music, Album, Upload, CheckCircle, XCircle, Trash2 } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
@@ -18,7 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 
 const ArtistPage = () => {
-	const { mySongs, myAlbums, fetchMyUploads, uploadSong, uploadAlbum, isLoading, error } = useArtistStore();
+	const { mySongs, myAlbums, dashboard, fetchMyUploads, uploadSong, uploadAlbum, deleteMySong, isLoading, error } =
+		useArtistStore();
 	const [isSongDialogOpen, setIsSongDialogOpen] = useState(false);
 	const [isAlbumDialogOpen, setIsAlbumDialogOpen] = useState(false);
 	const [songForm, setSongForm] = useState({
@@ -258,6 +259,41 @@ const ArtistPage = () => {
 						</div>
 					</div>
 
+					<div className='grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6'>
+						<div className='rounded-md bg-zinc-800/50 p-3'>
+							<p className='text-xs text-zinc-400'>Total Plays</p>
+							<p className='text-xl font-semibold'>{dashboard?.totalPlays ?? 0}</p>
+						</div>
+						<div className='rounded-md bg-zinc-800/50 p-3'>
+							<p className='text-xs text-zinc-400'>Followers</p>
+							<p className='text-xl font-semibold'>{dashboard?.followers ?? 0}</p>
+						</div>
+						<div className='rounded-md bg-zinc-800/50 p-3'>
+							<p className='text-xs text-zinc-400'>Unique Listeners</p>
+							<p className='text-xl font-semibold'>{dashboard?.uniqueListeners ?? 0}</p>
+						</div>
+						<div className='rounded-md bg-zinc-800/50 p-3'>
+							<p className='text-xs text-zinc-400'>Uploaded Songs</p>
+							<p className='text-xl font-semibold'>{dashboard?.totalSongs ?? mySongs.length}</p>
+						</div>
+					</div>
+
+					{dashboard?.topSongs?.length ? (
+						<div className='rounded-md bg-zinc-800/40 p-4 mb-6'>
+							<h2 className='text-sm font-semibold mb-3'>Top Songs</h2>
+							<div className='space-y-2'>
+								{dashboard.topSongs.map((song, index) => (
+									<div key={song._id} className='flex items-center justify-between text-sm'>
+										<span className='text-zinc-300 truncate'>
+											{index + 1}. {song.title}
+										</span>
+										<span className='text-zinc-500'>{song.totalPlays ?? song.playCount ?? 0} plays</span>
+									</div>
+								))}
+							</div>
+						</div>
+					) : null}
+
 					<Tabs defaultValue='songs' className='space-y-6'>
 						<TabsList className='p-1 bg-zinc-800/50'>
 							<TabsTrigger value='songs' className='data-[state=active]:bg-zinc-700'>
@@ -288,7 +324,7 @@ const ArtistPage = () => {
 											<img src={song.imageUrl} alt={song.title} className='w-full aspect-square object-cover rounded mb-3' />
 											<h3 className='font-semibold truncate'>{song.title}</h3>
 											<p className='text-sm text-zinc-400 truncate'>{song.artist}</p>
-											<div className='flex items-center gap-2 mt-2'>
+											<div className='flex items-center justify-between gap-2 mt-2'>
 												{song.isApproved ? (
 													<span className='text-xs text-emerald-500 flex items-center gap-1'>
 														<CheckCircle className='size-3' />
@@ -300,6 +336,14 @@ const ArtistPage = () => {
 														Pending
 													</span>
 												)}
+												<Button
+													size='icon'
+													variant='ghost'
+													className='text-red-400 hover:text-red-300'
+													onClick={() => deleteMySong(song._id)}
+												>
+													<Trash2 className='size-4' />
+												</Button>
 											</div>
 										</div>
 									))}

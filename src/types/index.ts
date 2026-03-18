@@ -9,6 +9,7 @@ export interface Song {
 	createdAt: string;
 	updatedAt: string;
 	playCount?: number;
+	totalPlays?: number;
 	isApproved?: boolean;
 	uploadedBy?: string | User;
 }
@@ -67,4 +68,31 @@ export interface Favorite {
 	songId: string | Song;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export interface ListeningHistoryItem {
+	_id: string;
+	playCount: number;
+	lastPlayedAt: string;
+	song: Song;
+}
+
+export interface ListeningHistoryStats {
+	totalPlays: number;
+	uniqueSongs: number;
+	lastPlayedAt: string | null;
+}
+
+export interface ArtistDashboardStats {
+	totalPlays: number;
+	uniqueListeners: number;
+	followers: number;
+	totalSongs: number;
+	topSongs: Song[];
+}
+
+export interface RecommendationResponse {
+	topArtists: string[];
+	topGenres: string[];
+	recommendations: Song[];
 }

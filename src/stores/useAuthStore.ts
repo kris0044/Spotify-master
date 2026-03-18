@@ -26,13 +26,29 @@ export const useAuthStore = create<AuthStore>((set) => ({
 		set({ isLoading: true, error: null });
 
 		try {
-			const res = await axiosInstance.get("/admin/check");
-			set({ isAdmin: res.data.admin  });
+			const [adminRes, userRes] = await Promise.all([
+				axiosInstance.get("/admin/check").catch(() => ({ data: { admin: false } })),
+				axiosInstance.get<User>("/users/me").catch(() => ({ data: null })),
+			]);
+
+			const currentUser = userRes.data;
+			const role = currentUser?.role || null;
+			const isAdmin = Boolean(adminRes.data.admin) || role === "admin";
+			const isArtist = role === "artist";
+
+			set({
+				isAdmin,
+				isArtist,
+				role,
+				user: currentUser || null,
+			});
 		} catch {
-			// If 401 or any error, user is not admin
 			set({
 				isAdmin: false,
-				error: null, // Don't show error for admin check failures
+				isArtist: false,
+				role: null,
+				user: null,
+				error: null,
 			});
 		} finally {
 			set({ isLoading: false });
@@ -42,19 +58,25 @@ export const useAuthStore = create<AuthStore>((set) => ({
 	checkUserRole: async () => {
 		set({ isLoading: true, error: null });
 		try {
-			// Fetch current user info - we'll need to add this endpoint or use existing user data
-			// For now, we'll check admin status and infer artist from that
-			const res = await axiosInstance.get("/admin/check").catch(() => ({ data: { admin: false } }));
-			set({ isAdmin: res.data.admin });
-			// Artist check will be done via try/catch on artist endpoints
+			const [adminRes, userRes] = await Promise.all([
+				axiosInstance.get("/admin/check").catch(() => ({ data: { admin: false } })),
+				axiosInstance.get<User>("/users/me"),
+			]);
+			const role = userRes.data?.role || "user";
+			set({
+				user: userRes.data,
+				role,
+				isArtist: role === "artist",
+				isAdmin: Boolean(adminRes.data.admin) || role === "admin",
+			});
 		} catch {
-			set({ isAdmin: false, error: null });
+			set({ isAdmin: false, isArtist: false, role: null, user: null, error: null });
 		} finally {
 			set({ isLoading: false });
 		}
 	},
 
 	reset: () => {
-		set({ isAdmin: false, isArtist: false, user: null, isLoading: false, error: null });
+		set({ isAdmin: false, isArtist: false, user: null, isLoading: false, error: null, role: null });
 	},
 }));

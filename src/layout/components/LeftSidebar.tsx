@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { SignedIn } from "@clerk/clerk-react";
-import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic } from "lucide-react";
+import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -13,7 +13,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 const LeftSidebar = () => {
 	const { albums, fetchAlbums, isLoading } = useMusicStore();
 	const { playlists, fetchPlaylists } = usePlaylistStore();
-	const { isAdmin, role } = useAuthStore(); // Added role for conditional check
+	const { isAdmin, isArtist } = useAuthStore();
 
 	useEffect(() => {
 		fetchAlbums();
@@ -65,6 +65,18 @@ const LeftSidebar = () => {
 							<span className='hidden md:inline'>Favorites</span>
 						</Link>
 						<Link
+							to={"/history"}
+							className={cn(
+								buttonVariants({
+									variant: "ghost",
+									className: "w-full justify-start text-white hover:bg-zinc-800",
+								})
+							)}
+						>
+							<History className='mr-2 size-5' />
+							<span className='hidden md:inline'>History</span>
+						</Link>
+						<Link
 							to={"/playlists"}
 							className={cn(
 								buttonVariants({
@@ -76,7 +88,7 @@ const LeftSidebar = () => {
 							<Music2 className='mr-2 size-5' />
 							<span className='hidden md:inline'>Playlists</span>
 						</Link>
-						{(role === "artist" || isAdmin) && ( // Added condition for artist link
+						{(isArtist || isAdmin) && (
 							<Link
 								to={"/artist"}
 								className={cn(

@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react"; // Assuming lucide-react is installed for icons; install if needed: npm install lucide-react
 import { Link } from "react-router-dom"; // Assuming you're using react-router-dom for navigation; import if not already
+import { useRecommendationStore } from "@/stores/useRecommendationStore";
+import { useAuth } from "@clerk/clerk-react";
 
 const HomePage = () => {
 	const {
@@ -20,6 +22,8 @@ const HomePage = () => {
 		featuredSongs,
 		trendingSongs,
 	} = useMusicStore();
+	const { recommendations, fetchRecommendations } = useRecommendationStore();
+	const { isSignedIn } = useAuth();
 
 	const { initializeQueue } = usePlayerStore();
 
@@ -29,7 +33,10 @@ const HomePage = () => {
 		fetchFeaturedSongs();
 		fetchMadeForYouSongs();
 		fetchTrendingSongs();
-	}, [fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs]);
+		if (isSignedIn) {
+			fetchRecommendations();
+		}
+	}, [fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs, fetchRecommendations, isSignedIn]);
 
 	useEffect(() => {
 		if (madeForYouSongs.length > 0 && featuredSongs.length > 0 && trendingSongs.length > 0) {
@@ -52,6 +59,12 @@ const HomePage = () => {
 	);
 
 	const filteredTrending = trendingSongs.filter((song) =>
+		song.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+		song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+		song.albumId?.toLowerCase().includes(searchQuery.toLowerCase())
+	);
+
+	const filteredRecommendations = recommendations.filter((song) =>
 		song.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 		song.artist?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 		song.albumId?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -90,6 +103,9 @@ const HomePage = () => {
 					<FeaturedSection songs={filteredFeatured} />
 
 					<div className='space-y-8'>
+						{isSignedIn && filteredRecommendations.length > 0 && (
+							<SectionGrid title='Recommended For You' songs={filteredRecommendations} isLoading={false} />
+						)}
 						<SectionGrid title='Made For You' songs={filteredMadeForYou} isLoading={isLoading} />
 						<SectionGrid title='Trending' songs={filteredTrending} isLoading={isLoading} />
 					</div>

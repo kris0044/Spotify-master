@@ -36,8 +36,9 @@ export const useAdminStore = create<AdminStore>((set) => ({
 			const response = await axiosInstance.get("/admin/songs/pending");
 			set({ pendingSongs: response.data });
 		} catch (error: any) {
-			set({ error: error.response?.data?.message || "Failed to fetch pending songs" });
-			toast.error("Failed to fetch pending songs");
+			const errorMsg = error.response?.data?.message || "Failed to fetch pending songs";
+			set({ error: errorMsg });
+			toast.error(errorMsg);
 		} finally {
 			set({ isLoading: false });
 		}
@@ -49,8 +50,9 @@ export const useAdminStore = create<AdminStore>((set) => ({
 			const response = await axiosInstance.get("/admin/albums/pending");
 			set({ pendingAlbums: response.data });
 		} catch (error: any) {
-			set({ error: error.response?.data?.message || "Failed to fetch pending albums" });
-			toast.error("Failed to fetch pending albums");
+			const errorMsg = error.response?.data?.message || "Failed to fetch pending albums";
+			set({ error: errorMsg });
+			toast.error(errorMsg);
 		} finally {
 			set({ isLoading: false });
 		}

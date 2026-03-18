@@ -2,6 +2,7 @@ import { axiosInstance } from "@/lib/axios";
 import { Message, User } from "@/types";
 import { create } from "zustand";
 import { io } from "socket.io-client";
+import toast from "react-hot-toast";
 
 interface ChatStore {
 	users: User[];
@@ -102,6 +103,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 					newActivities.set(userId, activity);
 					return { userActivities: newActivities };
 				});
+			});
+
+			socket.on("artist_new_song", ({ song, artistName }) => {
+				if (song?.title) {
+					toast(`${artistName || "An artist"} uploaded: ${song.title}`);
+				}
 			});
 
 			set({ isConnected: true });
