@@ -17,6 +17,7 @@ interface MusicStore {
   hasMoreSongs: boolean; // Added to track if more songs available
 
 	fetchAlbums: () => Promise<void>;
+	fetchAlbumsByGenre: (genre?: string, search?: string) => Promise<void>;
 	fetchAlbumById: (id: string) => Promise<void>;
 	fetchFeaturedSongs: () => Promise<void>;
 	fetchMadeForYouSongs: () => Promise<void>;
@@ -25,7 +26,7 @@ interface MusicStore {
 	fetchSongs: () => Promise<void>;
 	updateSong: (id: string, data: FormData) => Promise<void>;
 
-  fetchAllSongs: (limit: number, offset: number, search?: string) => Promise<void>; // Added for pagination and search
+  fetchAllSongs: (limit: number, offset: number, search?: string, genre?: string) => Promise<void>; // Added for pagination and search
 	deleteSong: (id: string) => Promise<void>;
 	deleteAlbum: (id: string) => Promise<void>;
 }
@@ -141,6 +142,21 @@ export const useMusicStore = create<MusicStore>((set) => ({
 		}
 	},
 
+	fetchAlbumsByGenre: async (genre = "", search = "") => {
+		set({ isLoading: true, error: null });
+		try {
+			const queryParams = new URLSearchParams();
+			if (genre) queryParams.append("genre", genre);
+			if (search) queryParams.append("search", search);
+			const response = await axiosInstance.get(`/albums${queryParams.toString() ? `?${queryParams.toString()}` : ""}`);
+			set({ albums: response.data });
+		} catch (error: any) {
+			set({ error: error.response?.data?.message || error.message });
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
 	fetchAlbumById: async (id) => {
 		set({ isLoading: true, error: null });
 		try {
@@ -190,7 +206,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
 	},
 
 	
-  fetchAllSongs: async (limit, offset, search = "") => {
+  fetchAllSongs: async (limit, offset, search = "", genre = "") => {
     set({ isLoading: true, error: null });
     try {
       const queryParams = new URLSearchParams({
@@ -199,6 +215,9 @@ export const useMusicStore = create<MusicStore>((set) => ({
       });
       if (search) {
         queryParams.append("search", search);
+      }
+      if (genre) {
+        queryParams.append("genre", genre);
       }
       const response = await axiosInstance.get(`/songs?${queryParams.toString()}`);
       set((state) => ({

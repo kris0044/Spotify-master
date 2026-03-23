@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				role,
 				user: currentUser || null,
 			});
-		} catch {
+		} catch (error) {
 			set({
 				isAdmin: false,
 				isArtist: false,
@@ -50,6 +50,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				user: null,
 				error: null,
 			});
+			throw error;
 		} finally {
 			set({ isLoading: false });
 		}
@@ -69,8 +70,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
 				isArtist: role === "artist",
 				isAdmin: Boolean(adminRes.data.admin) || role === "admin",
 			});
-		} catch {
+		} catch (error) {
 			set({ isAdmin: false, isArtist: false, role: null, user: null, error: null });
+			throw error;
 		} finally {
 			set({ isLoading: false });
 		}

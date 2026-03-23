@@ -24,7 +24,7 @@ const FriendsActivity = () => {
 
 			{!user && <LoginPrompt />}
 
-			<ScrollArea className='flex-1'>
+			<ScrollArea className='h-[calc(100vh-220px)] pr-2'>
 				<div className='p-4 space-y-4'>
 					{users.map((user) => {
 						const activity = userActivities.get(user.clerkId);

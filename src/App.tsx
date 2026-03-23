@@ -5,9 +5,11 @@ import MainLayout from "./layout/MainLayout";
 import NotFoundPage from "./pages/404/NotFoundPage";
 import AdminPage from "./pages/admin/AdminPage";
 import AlbumPage from "./pages/album/AlbumPage";
+import AlbumsPage from "./pages/albums/AlbumsPage";
 import AuthCallbackPage from "./pages/auth-callback/AuthCallbackPage";
 import ArtistPage from "./pages/artist/ArtistPage";
 import ChatPage from "./pages/chat/ChatPage";
+import CommunityPage from "./pages/community/CommunityPage";
 import FavoritesPage from "./pages/favorites/FavoritesPage";
 import ListeningHistoryPage from "./pages/history/ListeningHistoryPage";
 import HomePage from "./pages/home/HomePage";
@@ -16,6 +18,7 @@ import PlaylistDetailPage from "./pages/playlists/PlaylistDetailPage";
 import PlaylistsPage from "./pages/playlists/PlaylistsPage";
 import AllSongsPage from "./pages/songs/AllSongsPage";
 import SignUpPage from "./pages/signup/SignUpPage";
+import NotificationsPage from "./pages/notifications/NotificationsPage";
 
 function App() {
 	return (
@@ -32,9 +35,12 @@ function App() {
 
 				<Route element={<MainLayout />}>
 					<Route path='/' element={<HomePage />} />
+					<Route path='/albums' element={<AlbumsPage />} />
 					<Route path='/songs' element={<AllSongsPage />} />
 					<Route path='/chat' element={<ChatPage />} />
+					<Route path='/community' element={<CommunityPage />} />
 					<Route path='/albums/:albumId' element={<AlbumPage />} />
+					<Route path='/notifications' element={<NotificationsPage />} />
 					<Route path='/playlists' element={<PlaylistsPage />} />
 					<Route path='/playlists/:id' element={<PlaylistDetailPage />} />
 					<Route path='/favorites' element={<FavoritesPage />} />

@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
-import { Song, Album, User } from "@/types";
+import { Song, Album, User, AdminAnalytics, AnalyticsRange } from "@/types";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { useMusicStore } from "@/stores/useMusicStore";
@@ -8,12 +8,14 @@ interface AdminStore {
 	pendingSongs: Song[];
 	pendingAlbums: Album[];
 	users: User[];
+	analytics: AdminAnalytics | null;
 	isLoading: boolean;
 	error: string | null;
 
 	fetchPendingSongs: () => Promise<void>;
 	fetchPendingAlbums: () => Promise<void>;
 	fetchUsers: () => Promise<void>;
+	fetchAnalytics: (range: AnalyticsRange) => Promise<void>;
 	approveSong: (id: string) => Promise<void>;
 	rejectSong: (id: string) => Promise<void>;
 	approveAlbum: (id: string) => Promise<void>;
@@ -27,6 +29,7 @@ export const useAdminStore = create<AdminStore>((set) => ({
 	pendingSongs: [],
 	pendingAlbums: [],
 	users: [],
+	analytics: null,
 	isLoading: false,
 	error: null,
 
@@ -66,6 +69,20 @@ export const useAdminStore = create<AdminStore>((set) => ({
 		} catch (error: any) {
 			set({ error: error.response?.data?.message || "Failed to fetch users" });
 			toast.error("Failed to fetch users");
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	fetchAnalytics: async (range) => {
+		set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.get<AdminAnalytics>(`/admin/analytics?range=${range}`);
+			set({ analytics: response.data });
+		} catch (error: any) {
+			const errorMsg = error.response?.data?.message || "Failed to fetch dashboard analytics";
+			set({ error: errorMsg });
+			toast.error(errorMsg);
 		} finally {
 			set({ isLoading: false });
 		}
@@ -180,7 +197,7 @@ export const useAdminStore = create<AdminStore>((set) => ({
 	},
 
 	reset: () => {
-		set({ pendingSongs: [], pendingAlbums: [], users: [], isLoading: false, error: null });
+		set({ pendingSongs: [], pendingAlbums: [], users: [], analytics: null, isLoading: false, error: null });
 	},
 }));
 

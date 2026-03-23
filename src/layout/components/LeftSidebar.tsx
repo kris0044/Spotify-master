@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { SignedIn } from "@clerk/clerk-react";
-import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History } from "lucide-react";
+import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History, MessagesSquare, Bell, Disc3 } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -25,72 +25,24 @@ const LeftSidebar = () => {
 			{/* Navigation menu */}
 
 			<div className='rounded-lg bg-zinc-900 p-4'>
-				<div className='space-y-2'>
-					<Link
-						to={"/"}
-						className={cn(
-							buttonVariants({
-								variant: "ghost",
-								className: "w-full justify-start text-white hover:bg-zinc-800",
-							})
-						)}
-					>
-						<HomeIcon className='mr-2 size-5' />
-						<span className='hidden md:inline'>Home</span>
-					</Link>
+				<ScrollArea className='h-[350px] pr-2'>
+					<div className='space-y-2'>
+						<Link
+							to={"/"}
+							className={cn(
+								buttonVariants({
+									variant: "ghost",
+									className: "w-full justify-start text-white hover:bg-zinc-800",
+								})
+							)}
+						>
+							<HomeIcon className='mr-2 size-5' />
+							<span className='hidden md:inline'>Home</span>
+						</Link>
 
-					<SignedIn>
-						<Link
-							to={"/chat"}
-							className={cn(
-								buttonVariants({
-									variant: "ghost",
-									className: "w-full justify-start text-white hover:bg-zinc-800",
-								})
-							)}
-						>
-							<MessageCircle className='mr-2 size-5' />
-							<span className='hidden md:inline'>Messages</span>
-						</Link>
-						<Link
-							to={"/favorites"}
-							className={cn(
-								buttonVariants({
-									variant: "ghost",
-									className: "w-full justify-start text-white hover:bg-zinc-800",
-								})
-							)}
-						>
-							<Heart className='mr-2 size-5' />
-							<span className='hidden md:inline'>Favorites</span>
-						</Link>
-						<Link
-							to={"/history"}
-							className={cn(
-								buttonVariants({
-									variant: "ghost",
-									className: "w-full justify-start text-white hover:bg-zinc-800",
-								})
-							)}
-						>
-							<History className='mr-2 size-5' />
-							<span className='hidden md:inline'>History</span>
-						</Link>
-						<Link
-							to={"/playlists"}
-							className={cn(
-								buttonVariants({
-									variant: "ghost",
-									className: "w-full justify-start text-white hover:bg-zinc-800",
-								})
-							)}
-						>
-							<Music2 className='mr-2 size-5' />
-							<span className='hidden md:inline'>Playlists</span>
-						</Link>
-						{(isArtist || isAdmin) && (
+						<SignedIn>
 							<Link
-								to={"/artist"}
+								to={"/chat"}
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
@@ -98,13 +50,11 @@ const LeftSidebar = () => {
 									})
 								)}
 							>
-								<Mic className='mr-2 size-5' />
-								<span className='hidden md:inline'>Artist</span>
+								<MessageCircle className='mr-2 size-5' />
+								<span className='hidden md:inline'>Messages</span>
 							</Link>
-						)}
-						{isAdmin && (
 							<Link
-								to={"/admin"}
+								to={"/community"}
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
@@ -112,12 +62,100 @@ const LeftSidebar = () => {
 									})
 								)}
 							>
-								<User className='mr-2 size-5' />
-								<span className='hidden md:inline'>Admin</span>
+								<MessagesSquare className='mr-2 size-5' />
+								<span className='hidden md:inline'>Community</span>
 							</Link>
-						)}
-					</SignedIn>
-				</div>
+							<Link
+								to={"/notifications"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<Bell className='mr-2 size-5' />
+								<span className='hidden md:inline'>Notifications</span>
+							</Link>
+							<Link
+								to={"/favorites"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<Heart className='mr-2 size-5' />
+								<span className='hidden md:inline'>Favorites</span>
+							</Link>
+							<Link
+								to={"/history"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<History className='mr-2 size-5' />
+								<span className='hidden md:inline'>History</span>
+							</Link>
+							<Link
+								to={"/albums"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<Disc3 className='mr-2 size-5' />
+								<span className='hidden md:inline'>Albums</span>
+							</Link>
+							<Link
+								to={"/playlists"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<Music2 className='mr-2 size-5' />
+								<span className='hidden md:inline'>Playlists</span>
+							</Link>
+							{(isArtist || isAdmin) && (
+								<Link
+									to={"/artist"}
+									className={cn(
+										buttonVariants({
+											variant: "ghost",
+											className: "w-full justify-start text-white hover:bg-zinc-800",
+										})
+									)}
+								>
+									<Mic className='mr-2 size-5' />
+									<span className='hidden md:inline'>Artist</span>
+								</Link>
+							)}
+							{isAdmin && (
+								<Link
+									to={"/admin"}
+									className={cn(
+										buttonVariants({
+											variant: "ghost",
+											className: "w-full justify-start text-white hover:bg-zinc-800",
+										})
+									)}
+								>
+									<User className='mr-2 size-5' />
+									<span className='hidden md:inline'>Admin</span>
+								</Link>
+							)}
+						</SignedIn>
+					</div>
+				</ScrollArea>
 			</div>
 
 			{/* Library section */}
@@ -129,7 +167,7 @@ const LeftSidebar = () => {
 					</div>
 				</div>
 
-				<ScrollArea className='h-[calc(100vh-300px)]'>
+				<ScrollArea className='h-[350px] pr-2'>
 					<div className='space-y-2'>
 						<SignedIn>
 							{playlists.map((playlist) => (

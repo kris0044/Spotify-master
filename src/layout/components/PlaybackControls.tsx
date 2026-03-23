@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayerStore } from "@/stores/usePlayerStore";
-import { Laptop2, ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1 } from "lucide-react";
+import { Laptop2, ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const formatTime = (seconds: number) => {
@@ -11,7 +11,18 @@ const formatTime = (seconds: number) => {
 };
 
 export const PlaybackControls = () => {
-	const { currentSong, isPlaying, togglePlay, playNext, playPrevious } = usePlayerStore();
+	const {
+		currentSong,
+		isPlaying,
+		upNextQueue,
+		togglePlay,
+		playNext,
+		playPrevious,
+		removeFromUpNextQueue,
+		clearUpNextQueue,
+		isQueueOpen,
+		toggleQueuePanel,
+	} = usePlayerStore();
 
 	const [volume, setVolume] = useState(75);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -30,16 +41,9 @@ export const PlaybackControls = () => {
 		audio.addEventListener("timeupdate", updateTime);
 		audio.addEventListener("loadedmetadata", updateDuration);
 
-		const handleEnded = () => {
-			usePlayerStore.setState({ isPlaying: false });
-		};
-
-		audio.addEventListener("ended", handleEnded);
-
 		return () => {
 			audio.removeEventListener("timeupdate", updateTime);
 			audio.removeEventListener("loadedmetadata", updateDuration);
-			audio.removeEventListener("ended", handleEnded);
 		};
 	}, [currentSong]);
 
@@ -50,110 +54,116 @@ export const PlaybackControls = () => {
 	};
 
 	return (
-		<footer className='h-20 sm:h-24 bg-zinc-900 border-t border-zinc-800 px-4'>
-			<div className='flex justify-between items-center h-full max-w-[1800px] mx-auto'>
-				{/* currently playing song */}
-				<div className='hidden sm:flex items-center gap-4 min-w-[180px] w-[30%]'>
+		<footer className='relative h-20 sm:h-24 border-t border-zinc-800 bg-zinc-900 px-4'>
+			{isQueueOpen && (
+				<div className='absolute bottom-full right-4 mb-3 w-[360px] rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl'>
+					<div className='mb-4 flex items-center justify-between gap-3'>
+						<div>
+							<h3 className='font-semibold text-white'>Up Next Queue</h3>
+							<p className='text-xs text-zinc-500'>{upNextQueue.length} songs waiting to play next</p>
+						</div>
+						<div className='flex items-center gap-2'>
+							<Button variant='ghost' size='sm' onClick={() => void clearUpNextQueue()} disabled={upNextQueue.length === 0}>
+								Clear
+							</Button>
+							<Button variant='ghost' size='icon' onClick={toggleQueuePanel}>
+								<X className='h-4 w-4' />
+							</Button>
+						</div>
+					</div>
+
+					<div className='max-h-72 space-y-2 overflow-y-auto pr-1'>
+						{upNextQueue.length > 0 ? (
+							upNextQueue.map((song, index) => (
+								<div key={`${song._id}-${index}`} className='flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3'>
+									<img src={song.imageUrl} alt={song.title} className='h-12 w-12 rounded-lg object-cover' />
+									<div className='min-w-0 flex-1'>
+										<p className='truncate font-medium text-white'>{song.title}</p>
+										<p className='truncate text-xs text-zinc-400'>{song.artist}</p>
+									</div>
+									<Button variant='ghost' size='icon' onClick={() => void removeFromUpNextQueue(song._id)}>
+										<X className='h-4 w-4' />
+									</Button>
+								</div>
+							))
+						) : (
+							<div className='rounded-xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-zinc-500'>
+								Add songs with the queue button to make them play right after the current song.
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+
+			<div className='mx-auto flex h-full max-w-[1800px] items-center justify-between'>
+				<div className='hidden min-w-[180px] w-[30%] items-center gap-4 sm:flex'>
 					{currentSong && (
 						<>
-							<img
-								src={currentSong.imageUrl}
-								alt={currentSong.title}
-								className='w-14 h-14 object-cover rounded-md'
-							/>
-							<div className='flex-1 min-w-0'>
-								<div className='font-medium truncate hover:underline cursor-pointer'>
-									{currentSong.title}
-								</div>
-								<div className='text-sm text-zinc-400 truncate hover:underline cursor-pointer'>
-									{currentSong.artist}
-								</div>
+							<img src={currentSong.imageUrl} alt={currentSong.title} className='h-14 w-14 rounded-md object-cover' />
+							<div className='min-w-0 flex-1'>
+								<div className='cursor-pointer truncate font-medium hover:underline'>{currentSong.title}</div>
+								<div className='cursor-pointer truncate text-sm text-zinc-400 hover:underline'>{currentSong.artist}</div>
 							</div>
 						</>
 					)}
 				</div>
 
-				{/* player controls*/}
-				<div className='flex flex-col items-center gap-2 flex-1 max-w-full sm:max-w-[45%]'>
+				<div className='flex max-w-full flex-1 flex-col items-center gap-2 sm:max-w-[45%]'>
 					<div className='flex items-center gap-4 sm:gap-6'>
-						<Button
-							size='icon'
-							variant='ghost'
-							className='hidden sm:inline-flex hover:text-white text-zinc-400'
-						>
+						<Button size='icon' variant='ghost' className='hidden text-zinc-400 hover:text-white sm:inline-flex'>
 							<Shuffle className='h-4 w-4' />
 						</Button>
 
-						<Button
-							size='icon'
-							variant='ghost'
-							className='hover:text-white text-zinc-400'
-							onClick={playPrevious}
-							disabled={!currentSong}
-						>
+						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white' onClick={playPrevious} disabled={!currentSong}>
 							<SkipBack className='h-4 w-4' />
 						</Button>
 
-						<Button
-							size='icon'
-							className='bg-white hover:bg-white/80 text-black rounded-full h-8 w-8'
-							onClick={togglePlay}
-							disabled={!currentSong}
-						>
+						<Button size='icon' className='h-8 w-8 rounded-full bg-white text-black hover:bg-white/80' onClick={togglePlay} disabled={!currentSong}>
 							{isPlaying ? <Pause className='h-5 w-5' /> : <Play className='h-5 w-5' />}
 						</Button>
-						<Button
-							size='icon'
-							variant='ghost'
-							className='hover:text-white text-zinc-400'
-							onClick={playNext}
-							disabled={!currentSong}
-						>
+
+						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white' onClick={() => void playNext()} disabled={!currentSong}>
 							<SkipForward className='h-4 w-4' />
 						</Button>
-						<Button
-							size='icon'
-							variant='ghost'
-							className='hidden sm:inline-flex hover:text-white text-zinc-400'
-						>
+
+						<Button size='icon' variant='ghost' className='hidden text-zinc-400 hover:text-white sm:inline-flex'>
 							<Repeat className='h-4 w-4' />
 						</Button>
 					</div>
 
-					<div className='hidden sm:flex items-center gap-2 w-full'>
+					<div className='hidden w-full items-center gap-2 sm:flex'>
 						<div className='text-xs text-zinc-400'>{formatTime(currentTime)}</div>
 						<Slider
 							value={[currentTime]}
 							max={duration || 100}
 							step={1}
-							className='w-full hover:cursor-grab active:cursor-grabbing'
+							className='w-full active:cursor-grabbing hover:cursor-grab'
 							onValueChange={handleSeek}
 						/>
 						<div className='text-xs text-zinc-400'>{formatTime(duration)}</div>
 					</div>
 				</div>
-				{/* volume controls */}
-				<div className='hidden sm:flex items-center gap-4 min-w-[180px] w-[30%] justify-end'>
-					<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
+
+				<div className='hidden min-w-[180px] w-[30%] items-center justify-end gap-4 sm:flex'>
+					<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white'>
 						<Mic2 className='h-4 w-4' />
 					</Button>
-					<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
+					<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white' onClick={toggleQueuePanel}>
 						<ListMusic className='h-4 w-4' />
 					</Button>
-					<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
+					<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white'>
 						<Laptop2 className='h-4 w-4' />
 					</Button>
 
 					<div className='flex items-center gap-2'>
-						<Button size='icon' variant='ghost' className='hover:text-white text-zinc-400'>
+						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white'>
 							<Volume1 className='h-4 w-4' />
 						</Button>
-
 						<Slider
 							value={[volume]}
 							max={100}
 							step={1}
-							className='w-24 hover:cursor-grab active:cursor-grabbing'
+							className='w-24 active:cursor-grabbing hover:cursor-grab'
 							onValueChange={(value) => {
 								setVolume(value[0]);
 								if (audioRef.current) {

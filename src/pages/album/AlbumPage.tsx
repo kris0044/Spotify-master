@@ -1,12 +1,12 @@
+import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
-import { Clock, Pause, Play } from "lucide-react";
+import { ArrowLeft, Clock, Disc3, Pause, Play } from "lucide-react";
 import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const formatDuration = (seconds: number) => {
 	const minutes = Math.floor(seconds / 60);
 	const remainingSeconds = seconds % 60;
@@ -19,82 +19,112 @@ const AlbumPage = () => {
 	const { currentSong, isPlaying, playAlbum, togglePlay } = usePlayerStore();
 
 	useEffect(() => {
-		if (albumId) fetchAlbumById(albumId);
+		if (albumId) {
+			void fetchAlbumById(albumId);
+		}
 	}, [fetchAlbumById, albumId]);
 
-	if (isLoading) return null;
-
 	const handlePlayAlbum = () => {
-		if (!currentAlbum) return;
-
-		const isCurrentAlbumPlaying = currentAlbum?.songs.some((song) => song._id === currentSong?._id);
-		if (isCurrentAlbumPlaying) togglePlay();
-		else {
-			// start playing the album from the beginning
-			playAlbum(currentAlbum?.songs, 0);
+		if (!currentAlbum || currentAlbum.songs.length === 0) {
+			return;
 		}
+
+		const isCurrentAlbumPlaying = currentAlbum.songs.some((song) => song._id === currentSong?._id);
+		if (isCurrentAlbumPlaying) {
+			togglePlay();
+			return;
+		}
+
+		playAlbum(currentAlbum.songs, 0);
 	};
 
 	const handlePlaySong = (index: number) => {
-		if (!currentAlbum) return;
+		if (!currentAlbum) {
+			return;
+		}
 
-		playAlbum(currentAlbum?.songs, index);
+		playAlbum(currentAlbum.songs, index);
 	};
 
+	if (isLoading) {
+		return (
+			<main className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-900 to-black'>
+				<Topbar />
+				<div className='flex h-[calc(100vh-180px)] items-center justify-center text-zinc-400'>Loading album...</div>
+			</main>
+		);
+	}
+
+	if (!currentAlbum) {
+		return (
+			<main className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-900 to-black'>
+				<Topbar />
+				<div className='flex h-[calc(100vh-180px)] flex-col items-center justify-center px-6 text-center'>
+					<Disc3 className='h-12 w-12 text-zinc-600' />
+					<h1 className='mt-4 text-2xl font-semibold text-white'>Album not found</h1>
+					<p className='mt-2 text-sm text-zinc-400'>This album may be unavailable or not approved for users.</p>
+					<Button asChild className='mt-6 bg-white text-black hover:bg-zinc-100'>
+						<Link to='/albums'>Back to Albums</Link>
+					</Button>
+				</div>
+			</main>
+		);
+	}
+
 	return (
-		<div className='h-full'>
-			<ScrollArea className='h-full rounded-md'>
-				{/* Main Content */}
+		<main className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-900 to-black'>
+			<Topbar />
+			<ScrollArea className='h-[calc(100vh-180px)] rounded-md'>
 				<div className='relative min-h-full'>
-					{/* bg gradient */}
 					<div
-						className='absolute inset-0 bg-gradient-to-b from-[#5038a0]/80 via-zinc-900/80
-					 to-zinc-900 pointer-events-none'
+						className='absolute inset-0 bg-gradient-to-b from-emerald-700/30 via-zinc-900/80 to-zinc-950 pointer-events-none'
 						aria-hidden='true'
 					/>
 
-					{/* Content */}
 					<div className='relative z-10'>
-						<div className='flex p-6 gap-6 pb-8'>
+						<div className='px-6 pt-6'>
+							<Button asChild variant='ghost' className='text-zinc-300 hover:text-white'>
+								<Link to='/albums'>
+									<ArrowLeft className='mr-2 h-4 w-4' />
+									Back to Albums
+								</Link>
+							</Button>
+						</div>
+
+						<div className='flex flex-col gap-6 p-6 pb-8 lg:flex-row'>
 							<img
-								src={currentAlbum?.imageUrl}
-								alt={currentAlbum?.title}
-								className='w-[240px] h-[240px] shadow-xl rounded'
+								src={currentAlbum.imageUrl}
+								alt={currentAlbum.title}
+								className='h-[240px] w-[240px] rounded-2xl object-cover shadow-2xl'
 							/>
 							<div className='flex flex-col justify-end'>
-								<p className='text-sm font-medium'>Album</p>
-								<h1 className='text-7xl font-bold my-4'>{currentAlbum?.title}</h1>
-								<div className='flex items-center gap-2 text-sm text-zinc-100'>
-									<span className='font-medium text-white'>{currentAlbum?.artist}</span>
-									<span>• {currentAlbum?.songs.length} songs</span>
-									<span>• {currentAlbum?.releaseYear}</span>
+								<p className='text-sm font-medium uppercase tracking-[0.24em] text-zinc-300'>Album</p>
+								<h1 className='my-4 text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl'>{currentAlbum.title}</h1>
+								<div className='flex flex-wrap items-center gap-2 text-sm text-zinc-200'>
+									<span className='font-medium text-white'>{currentAlbum.artist}</span>
+									<span>• {currentAlbum.songs.length} songs</span>
+									<span>• {currentAlbum.releaseYear}</span>
 								</div>
 							</div>
 						</div>
 
-						{/* play button */}
-						<div className='px-6 pb-4 flex items-center gap-6'>
+						<div className='flex items-center gap-6 px-6 pb-4'>
 							<Button
 								onClick={handlePlayAlbum}
 								size='icon'
-								className='w-14 h-14 rounded-full bg-green-500 hover:bg-green-400 
-                hover:scale-105 transition-all'
+								disabled={currentAlbum.songs.length === 0}
+								className='h-14 w-14 rounded-full bg-green-500 text-black hover:scale-105 hover:bg-green-400 transition-all disabled:opacity-50'
 							>
-								{isPlaying && currentAlbum?.songs.some((song) => song._id === currentSong?._id) ? (
-									<Pause className='h-7 w-7 text-black' />
+								{isPlaying && currentAlbum.songs.some((song) => song._id === currentSong?._id) ? (
+									<Pause className='h-7 w-7' />
 								) : (
-									<Play className='h-7 w-7 text-black' />
+									<Play className='h-7 w-7' />
 								)}
 							</Button>
 						</div>
 
-						{/* Table Section */}
 						<div className='bg-black/20 backdrop-blur-sm'>
-							{/* table header */}
-							<div
-								className='grid grid-cols-[16px_4fr_2fr_1fr] gap-4 px-10 py-2 text-sm 
-            text-zinc-400 border-b border-white/5'
-							>
+							<div className='grid grid-cols-[16px_4fr_2fr_1fr] gap-4 border-b border-white/5 px-10 py-3 text-sm text-zinc-400'>
 								<div>#</div>
 								<div>Title</div>
 								<div>Released Date</div>
@@ -103,19 +133,16 @@ const AlbumPage = () => {
 								</div>
 							</div>
 
-							{/* songs list */}
-
 							<div className='px-6'>
 								<div className='space-y-2 py-4'>
-									{currentAlbum?.songs.map((song, index) => {
+									{currentAlbum.songs.map((song, index) => {
 										const isCurrentSong = currentSong?._id === song._id;
+
 										return (
 											<div
 												key={song._id}
 												onClick={() => handlePlaySong(index)}
-												className={`grid grid-cols-[16px_4fr_2fr_1fr] gap-4 px-4 py-2 text-sm 
-                      text-zinc-400 hover:bg-white/5 rounded-md group cursor-pointer
-                      `}
+												className='group grid cursor-pointer grid-cols-[16px_4fr_2fr_1fr] gap-4 rounded-md px-4 py-2 text-sm text-zinc-400 hover:bg-white/5'
 											>
 												<div className='flex items-center justify-center'>
 													{isCurrentSong && isPlaying ? (
@@ -123,16 +150,13 @@ const AlbumPage = () => {
 													) : (
 														<span className='group-hover:hidden'>{index + 1}</span>
 													)}
-													{!isCurrentSong && (
-														<Play className='h-4 w-4 hidden group-hover:block' />
-													)}
+													{!isCurrentSong && <Play className='hidden h-4 w-4 group-hover:block' />}
 												</div>
 
 												<div className='flex items-center gap-3'>
-													<img src={song.imageUrl} alt={song.title} className='size-10' />
-
+													<img src={song.imageUrl} alt={song.title} className='size-10 rounded object-cover' />
 													<div>
-														<div className={`font-medium text-white`}>{song.title}</div>
+														<div className='font-medium text-white'>{song.title}</div>
 														<div>{song.artist}</div>
 													</div>
 												</div>
@@ -141,13 +165,20 @@ const AlbumPage = () => {
 											</div>
 										);
 									})}
+
+									{currentAlbum.songs.length === 0 && (
+										<div className='rounded-2xl border border-dashed border-white/10 px-4 py-10 text-center text-sm text-zinc-500'>
+											No songs available in this album yet.
+										</div>
+									)}
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</ScrollArea>
-		</div>
+		</main>
 	);
 };
+
 export default AlbumPage;

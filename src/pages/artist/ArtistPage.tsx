@@ -17,6 +17,24 @@ import Topbar from "@/components/Topbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 
+interface AlbumSongDraft {
+	title: string;
+	artist: string;
+	genre: string;
+	duration: string;
+	audioFile: File | null;
+	imageFile: File | null;
+}
+
+const createEmptyAlbumSong = (artist = ""): AlbumSongDraft => ({
+	title: "",
+	artist,
+	genre: "",
+	duration: "0",
+	audioFile: null,
+	imageFile: null,
+});
+
 const ArtistPage = () => {
 	const { mySongs, myAlbums, dashboard, fetchMyUploads, uploadSong, uploadAlbum, deleteMySong, isLoading, error } =
 		useArtistStore();
@@ -25,6 +43,7 @@ const ArtistPage = () => {
 	const [songForm, setSongForm] = useState({
 		title: "",
 		artist: "",
+		genre: "",
 		duration: "",
 		albumId: "",
 		audioFile: null as File | null,
@@ -33,8 +52,10 @@ const ArtistPage = () => {
 	const [albumForm, setAlbumForm] = useState({
 		title: "",
 		artist: "",
+		genre: "",
 		releaseYear: "",
 		imageFile: null as File | null,
+		songs: [createEmptyAlbumSong()],
 	});
 
 	useEffect(() => {
@@ -49,6 +70,7 @@ const ArtistPage = () => {
 		const formData = new FormData();
 		formData.append("title", songForm.title);
 		formData.append("artist", songForm.artist);
+		formData.append("genre", songForm.genre);
 		formData.append("duration", songForm.duration);
 		if (songForm.albumId) formData.append("albumId", songForm.albumId);
 		formData.append("audioFile", songForm.audioFile);
@@ -59,6 +81,7 @@ const ArtistPage = () => {
 		setSongForm({
 			title: "",
 			artist: "",
+			genre: "",
 			duration: "",
 			albumId: "",
 			audioFile: null,
@@ -67,23 +90,48 @@ const ArtistPage = () => {
 	};
 
 	const handleUploadAlbum = async () => {
-		if (!albumForm.title || !albumForm.artist || !albumForm.releaseYear || !albumForm.imageFile) {
+		const validSongs = albumForm.songs.filter((song) => song.title.trim() && song.audioFile);
+
+		if (!albumForm.title || !albumForm.artist || !albumForm.releaseYear || !albumForm.imageFile || validSongs.length === 0) {
 			return;
 		}
 
 		const formData = new FormData();
 		formData.append("title", albumForm.title);
 		formData.append("artist", albumForm.artist);
+		formData.append("genre", albumForm.genre);
 		formData.append("releaseYear", albumForm.releaseYear);
 		formData.append("imageFile", albumForm.imageFile);
+		formData.append(
+			"songs",
+			JSON.stringify(
+				validSongs.map((song) => ({
+					title: song.title.trim(),
+					artist: song.artist.trim() || albumForm.artist,
+					genre: song.genre.trim() || albumForm.genre,
+					duration: song.duration || "0",
+				}))
+			)
+		);
+
+		validSongs.forEach((song, index) => {
+			if (song.audioFile) {
+				formData.append(`audioFile_${index}`, song.audioFile);
+			}
+			if (song.imageFile) {
+				formData.append(`imageFile_${index}`, song.imageFile);
+			}
+		});
 
 		await uploadAlbum(formData);
 		setIsAlbumDialogOpen(false);
 		setAlbumForm({
 			title: "",
 			artist: "",
+			genre: "",
 			releaseYear: "",
 			imageFile: null,
+			songs: [createEmptyAlbumSong()],
 		});
 	};
 
@@ -137,6 +185,14 @@ const ArtistPage = () => {
 												value={songForm.duration}
 												onChange={(e) => setSongForm({ ...songForm, duration: e.target.value })}
 												placeholder='Duration in seconds'
+											/>
+										</div>
+										<div>
+											<Label>Genre</Label>
+											<Input
+												value={songForm.genre}
+												onChange={(e) => setSongForm({ ...songForm, genre: e.target.value })}
+												placeholder='Genre'
 											/>
 										</div>
 										<div>
@@ -194,12 +250,12 @@ const ArtistPage = () => {
 										Upload Album
 									</Button>
 								</DialogTrigger>
-								<DialogContent>
+								<DialogContent className='max-w-2xl'>
 									<DialogHeader>
 										<DialogTitle>Upload New Album</DialogTitle>
-										<DialogDescription>Upload your album for admin approval.</DialogDescription>
+										<DialogDescription>Upload your album and tracks for admin approval.</DialogDescription>
 									</DialogHeader>
-									<div className='space-y-4'>
+									<div className='space-y-4 max-h-[70vh] overflow-y-auto pr-2'>
 										<div>
 											<Label>Title</Label>
 											<Input
@@ -228,6 +284,14 @@ const ArtistPage = () => {
 											/>
 										</div>
 										<div>
+											<Label>Genre</Label>
+											<Input
+												value={albumForm.genre}
+												onChange={(e) => setAlbumForm({ ...albumForm, genre: e.target.value })}
+												placeholder='Album genre'
+											/>
+										</div>
+										<div>
 											<Label>Cover Image</Label>
 											<Input
 												type='file'
@@ -236,6 +300,141 @@ const ArtistPage = () => {
 													setAlbumForm({ ...albumForm, imageFile: e.target.files?.[0] || null })
 												}
 											/>
+										</div>
+										<div className='space-y-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-4'>
+											<div className='flex items-center justify-between gap-3'>
+												<div>
+													<p className='text-sm font-medium'>Album Songs</p>
+													<p className='text-xs text-zinc-400'>Add multiple tracks. The album stays pending until admin approval.</p>
+												</div>
+												<Button
+													type='button'
+													variant='outline'
+													onClick={() =>
+														setAlbumForm((current) => ({
+															...current,
+															songs: [...current.songs, createEmptyAlbumSong(current.artist)],
+														}))
+													}
+												>
+													<Plus className='mr-2 size-4' />
+													Add Track
+												</Button>
+											</div>
+											<div className='space-y-3'>
+												{albumForm.songs.map((song, index) => (
+													<div key={index} className='rounded-md border border-zinc-800 bg-zinc-900/60 p-3 space-y-3'>
+														<div className='flex items-center justify-between gap-3'>
+															<p className='text-sm font-medium'>Track {index + 1}</p>
+															{albumForm.songs.length > 1 ? (
+																<Button
+																	type='button'
+																	size='sm'
+																	variant='ghost'
+																	className='text-red-400 hover:text-red-300'
+																	onClick={() =>
+																		setAlbumForm((current) => ({
+																			...current,
+																			songs: current.songs.filter((_, currentIndex) => currentIndex !== index),
+																		}))
+																	}
+																>
+																	<Trash2 className='mr-2 size-4' />
+																	Remove
+																</Button>
+															) : null}
+														</div>
+														<div className='grid gap-3 md:grid-cols-4'>
+															<Input
+																value={song.title}
+																onChange={(e) =>
+																	setAlbumForm((current) => ({
+																		...current,
+																		songs: current.songs.map((item, currentIndex) =>
+																			currentIndex === index ? { ...item, title: e.target.value } : item
+																		),
+																	}))
+																}
+																placeholder='Track title'
+															/>
+															<Input
+																value={song.artist}
+																onChange={(e) =>
+																	setAlbumForm((current) => ({
+																		...current,
+																		songs: current.songs.map((item, currentIndex) =>
+																			currentIndex === index ? { ...item, artist: e.target.value } : item
+																		),
+																	}))
+																}
+																placeholder='Artist name'
+															/>
+															<Input
+																value={song.genre}
+																onChange={(e) =>
+																	setAlbumForm((current) => ({
+																		...current,
+																		songs: current.songs.map((item, currentIndex) =>
+																			currentIndex === index ? { ...item, genre: e.target.value } : item
+																		),
+																	}))
+																}
+																placeholder='Genre'
+															/>
+															<Input
+																type='number'
+																min='0'
+																value={song.duration}
+																onChange={(e) =>
+																	setAlbumForm((current) => ({
+																		...current,
+																		songs: current.songs.map((item, currentIndex) =>
+																			currentIndex === index ? { ...item, duration: e.target.value } : item
+																		),
+																	}))
+																}
+																placeholder='Duration in seconds'
+															/>
+														</div>
+														<div className='grid gap-3 md:grid-cols-2'>
+															<div>
+																<Label>Audio File</Label>
+																<Input
+																	type='file'
+																	accept='audio/*'
+																	onChange={(e) =>
+																		setAlbumForm((current) => ({
+																			...current,
+																			songs: current.songs.map((item, currentIndex) =>
+																				currentIndex === index
+																					? { ...item, audioFile: e.target.files?.[0] || null }
+																					: item
+																			),
+																		}))
+																	}
+																/>
+															</div>
+															<div>
+																<Label>Track Image (optional)</Label>
+																<Input
+																	type='file'
+																	accept='image/*'
+																	onChange={(e) =>
+																		setAlbumForm((current) => ({
+																			...current,
+																			songs: current.songs.map((item, currentIndex) =>
+																				currentIndex === index
+																					? { ...item, imageFile: e.target.files?.[0] || null }
+																					: item
+																			),
+																		}))
+																	}
+																/>
+															</div>
+														</div>
+													</div>
+												))}
+											</div>
 										</div>
 									</div>
 									<DialogFooter>
@@ -248,7 +447,8 @@ const ArtistPage = () => {
 												!albumForm.title ||
 												!albumForm.artist ||
 												!albumForm.releaseYear ||
-												!albumForm.imageFile
+												!albumForm.imageFile ||
+												albumForm.songs.every((song) => !song.title.trim() || !song.audioFile)
 											}
 										>
 											Upload

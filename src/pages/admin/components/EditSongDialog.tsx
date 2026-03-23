@@ -27,6 +27,7 @@ const { albums, updateSong } = useMusicStore();
 	const [updatedSong, setUpdatedSong] = useState({
 		title: song.title,
 		artist: song.artist,
+		genre: song.genre || "",
 		album: song.albumId ? song.albumId.toString() : "none",
 		duration: song.duration.toString(),
 	});
@@ -45,6 +46,7 @@ const { albums, updateSong } = useMusicStore();
 	const formData = new FormData();
 	formData.append("title", updatedSong.title);
 	formData.append("artist", updatedSong.artist);
+	formData.append("genre", updatedSong.genre);
 	formData.append("duration", updatedSong.duration);
 
 	if (updatedSong.album !== "none") {
@@ -143,6 +145,16 @@ const { albums, updateSong } = useMusicStore();
 							value={updatedSong.artist}
 							onChange={(e) => setUpdatedSong({ ...updatedSong, artist: e.target.value })}
 							className='bg-zinc-800 border-zinc-700'
+						/>
+					</div>
+
+					<div className='space-y-2'>
+						<label className='text-sm font-medium'>Genre</label>
+						<Input
+							value={updatedSong.genre}
+							onChange={(e) => setUpdatedSong({ ...updatedSong, genre: e.target.value })}
+							className='bg-zinc-800 border-zinc-700'
+							placeholder='Pop, Rock, Hip Hop...'
 						/>
 					</div>
 

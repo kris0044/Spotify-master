@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 interface NewSong {
 	title: string;
 	artist: string;
+	genre: string;
 	album: string;
 	duration: string;
 }
@@ -31,6 +32,7 @@ const AddSongDialog = () => {
 	const [newSong, setNewSong] = useState<NewSong>({
 		title: "",
 		artist: "",
+		genre: "",
 		album: "",
 		duration: "0",
 	});
@@ -55,6 +57,7 @@ const AddSongDialog = () => {
 
 			formData.append("title", newSong.title);
 			formData.append("artist", newSong.artist);
+			formData.append("genre", newSong.genre);
 			formData.append("duration", newSong.duration);
 			if (newSong.album && newSong.album !== "none") {
 				formData.append("albumId", newSong.album);
@@ -72,6 +75,7 @@ const AddSongDialog = () => {
 			setNewSong({
 				title: "",
 				artist: "",
+				genre: "",
 				album: "",
 				duration: "0",
 			});
@@ -171,6 +175,16 @@ const AddSongDialog = () => {
 							value={newSong.artist}
 							onChange={(e) => setNewSong({ ...newSong, artist: e.target.value })}
 							className='bg-zinc-800 border-zinc-700'
+						/>
+					</div>
+
+					<div className='space-y-2'>
+						<label className='text-sm font-medium'>Genre</label>
+						<Input
+							value={newSong.genre}
+							onChange={(e) => setNewSong({ ...newSong, genre: e.target.value })}
+							className='bg-zinc-800 border-zinc-700'
+							placeholder='Pop, Rock, Hip Hop...'
 						/>
 					</div>
 

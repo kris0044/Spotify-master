@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Bell, BellOff, Heart, Plus } from "lucide-react";
+import { Bell, BellOff, Heart, ListPlus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavoriteStore } from "@/stores/useFavoriteStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useFollowStore } from "@/stores/useFollowStore";
+import { usePlayerStore } from "@/stores/usePlayerStore";
 import { Song } from "@/types";
 import toast from "react-hot-toast";
 import {
@@ -34,6 +35,7 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 	const { addToFavorites, removeFromFavorites, checkIsFavorite } = useFavoriteStore();
 	const { playlists, fetchPlaylists, addSongToPlaylist } = usePlaylistStore();
 	const { fetchFollowing, isFollowingSong, followSong, unfollowSong, isHydrated } = useFollowStore();
+	const { addToUpNextQueue } = usePlayerStore();
 	const [isFavoriteState, setIsFavoriteState] = useState(false);
 	const [isFollowingState, setIsFollowingState] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -107,6 +109,11 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 					className={isFavoriteState ? "text-red-500 hover:text-red-400" : ""}
 				>
 					<Heart className={`size-4 ${isFavoriteState ? "fill-current" : ""}`} />
+				</Button>
+			)}
+			{showPlaylist && (
+				<Button size='sm' variant='ghost' onClick={() => addToUpNextQueue(song)}>
+					<ListPlus className='size-4' />
 				</Button>
 			)}
 			{showPlaylist && (

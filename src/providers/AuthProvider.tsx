@@ -1,39 +1,76 @@
 import { setTokenGetter } from "@/lib/axios";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useChatStore } from "@/stores/useChatStore";
+import { useNotificationStore } from "@/stores/useNotificationStore";
+import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useAuth } from "@clerk/clerk-react";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-	const { getToken, userId } = useAuth();
+	const { getToken, userId, isLoaded, isSignedIn } = useAuth();
 	const [loading, setLoading] = useState(true);
 
 	const { checkUserRole } = useAuthStore();
 	const { initSocket, disconnectSocket } = useChatStore();
+	const { fetchNotifications, bindSocket, reset: resetNotifications } = useNotificationStore();
+	const { fetchUpNextQueue, resetQueueState } = usePlayerStore();
 
 	useEffect(() => {
+		if (!isLoaded) {
+			return;
+		}
+
+		let cancelled = false;
+
 		const initAuth = async () => {
 			try {
-				setTokenGetter(getToken);
+				setTokenGetter(() => (isSignedIn ? getToken() : Promise.resolve(null)));
 
-				if (userId) {
-					await checkUserRole();
+				if (isSignedIn && userId) {
+					try {
+						await checkUserRole();
+					} catch {
+						await wait(400);
+						if (!cancelled) {
+							await checkUserRole();
+						}
+					}
+
+					if (cancelled) {
+						return;
+					}
+
 					initSocket(userId);
+					bindSocket();
+					await fetchNotifications();
+					await fetchUpNextQueue();
 				} else {
 					useAuthStore.getState().reset();
+					resetNotifications();
+					resetQueueState();
+					setTokenGetter(null);
+					disconnectSocket();
 				}
 			} catch (error) {
 				console.error("Auth initialization error:", error);
 			} finally {
-				setLoading(false);
+				if (!cancelled) {
+					setLoading(false);
+				}
 			}
 		};
 
+		setLoading(true);
 		void initAuth();
 
-		return () => disconnectSocket();
-	}, [getToken, userId, checkUserRole, initSocket, disconnectSocket]);
+		return () => {
+			cancelled = true;
+			disconnectSocket();
+		};
+	}, [isLoaded, isSignedIn, getToken, userId, checkUserRole, initSocket, disconnectSocket, fetchNotifications, bindSocket, resetNotifications, fetchUpNextQueue, resetQueueState]);
 
 	if (loading) {
 		return (

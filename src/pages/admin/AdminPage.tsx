@@ -1,6 +1,5 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import Header from "./components/Header";
-import DashboardStats from "./components/DashboardStats";
 import { Album, Music, Clock, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SongsTabContent from "./components/SongsTabContent";
@@ -9,6 +8,7 @@ import PendingTabContent from "./components/PendingTabContent";
 import UsersTabContent from "./components/UsersTabContent";
 import { useEffect } from "react";
 import { useMusicStore } from "@/stores/useMusicStore";
+import AdminOverview from "./components/AdminOverview";
 
 const AdminPage = () => {
 	const { isAdmin, isLoading } = useAuthStore();
@@ -16,10 +16,14 @@ const AdminPage = () => {
 	const { fetchAlbums, fetchSongs, fetchStats } = useMusicStore();
 
 	useEffect(() => {
+		if (!isAdmin) {
+			return;
+		}
+
 		fetchAlbums();
 		fetchSongs();
 		fetchStats();
-	}, [fetchAlbums, fetchSongs, fetchStats]);
+	}, [isAdmin, fetchAlbums, fetchSongs, fetchStats]);
 
 	if (!isAdmin && !isLoading) return <div>Unauthorized</div>;
 
@@ -29,8 +33,7 @@ const AdminPage = () => {
    to-black text-zinc-100 p-8'
 		>
 			<Header />
-
-			<DashboardStats />
+			<AdminOverview />
 
 			<Tabs defaultValue='songs' className='space-y-6'>
 				<TabsList className='p-1 bg-zinc-800/50'>
