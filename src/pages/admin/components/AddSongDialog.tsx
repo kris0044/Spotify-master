@@ -28,6 +28,7 @@ const AddSongDialog = () => {
 	const { albums } = useMusicStore();
 	const [songDialogOpen, setSongDialogOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [albumSearch, setAlbumSearch] = useState("");
 
 	const [newSong, setNewSong] = useState<NewSong>({
 		title: "",
@@ -91,6 +92,10 @@ const AddSongDialog = () => {
 			setIsLoading(false);
 		}
 	};
+
+	const filteredAlbums = albums.filter((album) =>
+		album.title.toLowerCase().includes(albumSearch.trim().toLowerCase())
+	);
 
 	return (
 		<Dialog open={songDialogOpen} onOpenChange={setSongDialogOpen}>
@@ -201,6 +206,12 @@ const AddSongDialog = () => {
 
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Album (Optional)</label>
+						<Input
+							value={albumSearch}
+							onChange={(e) => setAlbumSearch(e.target.value)}
+							className='bg-zinc-800 border-zinc-700'
+							placeholder='Search album'
+						/>
 						<Select
 							value={newSong.album}
 							onValueChange={(value) => setNewSong({ ...newSong, album: value })}
@@ -210,7 +221,7 @@ const AddSongDialog = () => {
 							</SelectTrigger>
 							<SelectContent className='bg-zinc-800 border-zinc-700'>
 								<SelectItem value='none'>No Album (Single)</SelectItem>
-								{albums.map((album) => (
+								{filteredAlbums.map((album) => (
 									<SelectItem key={album._id} value={album._id}>
 										{album.title}
 									</SelectItem>

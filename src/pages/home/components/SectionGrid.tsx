@@ -65,9 +65,12 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
 							</div>
 							<PlayButton song={song} />
 							<SignedIn>
-								<div className='absolute right-3 top-3 z-20 opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
-									<div className='rounded-full border border-white/10 bg-black/40 p-1 backdrop-blur-md'>
-										<SongActions song={song} />
+								<div className='absolute right-3 top-3 z-20 flex flex-col items-end gap-2'>
+									<div className='rounded-full border border-white/10 bg-black/50 p-1 backdrop-blur-md'>
+										<SongActions song={song} showPlaylist={false} showFollow={false} />
+									</div>
+									<div className='rounded-full border border-white/10 bg-black/40 p-1 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100'>
+										<SongActions song={song} showFavorite={false} />
 									</div>
 								</div>
 							</SignedIn>

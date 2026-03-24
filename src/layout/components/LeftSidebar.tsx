@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { SignedIn } from "@clerk/clerk-react";
-import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History, MessagesSquare, Bell, Disc3 } from "lucide-react";
+import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History, MessagesSquare, Bell, Disc3, Youtube, Trophy } from "lucide-react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -100,6 +100,30 @@ const LeftSidebar = () => {
 							>
 								<History className='mr-2 size-5' />
 								<span className='hidden md:inline'>History</span>
+							</Link>
+							<Link
+								to={"/publicmusic"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<Youtube className='mr-2 size-5' />
+								<span className='hidden md:inline'>PublicMusic</span>
+							</Link>
+							<Link
+								to={"/publicmusic/top100"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-start text-white hover:bg-zinc-800",
+									})
+								)}
+							>
+								<Trophy className='mr-2 size-5' />
+								<span className='hidden md:inline'>Top 100</span>
 							</Link>
 							<Link
 								to={"/albums"}

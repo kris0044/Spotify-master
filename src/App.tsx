@@ -19,6 +19,8 @@ import PlaylistsPage from "./pages/playlists/PlaylistsPage";
 import AllSongsPage from "./pages/songs/AllSongsPage";
 import SignUpPage from "./pages/signup/SignUpPage";
 import NotificationsPage from "./pages/notifications/NotificationsPage";
+import PublicMusicPage from "./pages/public-music/PublicMusicPage";
+import PublicMusicTop100Page from "./pages/public-music/PublicMusicTop100Page";
 
 function App() {
 	return (
@@ -41,6 +43,8 @@ function App() {
 					<Route path='/community' element={<CommunityPage />} />
 					<Route path='/albums/:albumId' element={<AlbumPage />} />
 					<Route path='/notifications' element={<NotificationsPage />} />
+					<Route path='/publicmusic' element={<PublicMusicPage />} />
+					<Route path='/publicmusic/top100' element={<PublicMusicTop100Page />} />
 					<Route path='/playlists' element={<PlaylistsPage />} />
 					<Route path='/playlists/:id' element={<PlaylistDetailPage />} />
 					<Route path='/favorites' element={<FavoritesPage />} />

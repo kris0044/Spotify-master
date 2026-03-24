@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Plus, Play, Trash2, X } from "lucide-react";
 import {
 	Dialog,
@@ -34,6 +35,7 @@ const PlaylistDetailPage = () => {
 	const { playAlbum } = usePlayerStore();
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [selectedSongId, setSelectedSongId] = useState("");
+	const [songSearch, setSongSearch] = useState("");
 
 	useEffect(() => {
 		if (id) {
@@ -66,6 +68,9 @@ const PlaylistDetailPage = () => {
 
 	const availableSongs = songs.filter(
 		(song) => !currentPlaylist?.songs.some((s) => (s as Song)._id === song._id)
+	);
+	const filteredSongs = availableSongs.filter((song) =>
+		`${song.title} ${song.artist}`.toLowerCase().includes(songSearch.trim().toLowerCase())
 	);
 
 	return (
@@ -114,12 +119,17 @@ const PlaylistDetailPage = () => {
 													<DialogTitle>Add Song to Playlist</DialogTitle>
 													<DialogDescription>Select a song to add to this playlist.</DialogDescription>
 												</DialogHeader>
+												<Input
+													value={songSearch}
+													onChange={(event) => setSongSearch(event.target.value)}
+													placeholder='Search songs'
+												/>
 												<Select value={selectedSongId} onValueChange={setSelectedSongId}>
 													<SelectTrigger>
 														<SelectValue placeholder='Select a song' />
 													</SelectTrigger>
 													<SelectContent>
-														{availableSongs.map((song) => (
+														{filteredSongs.map((song) => (
 															<SelectItem key={song._id} value={song._id}>
 																{song.title} - {song.artist}
 															</SelectItem>

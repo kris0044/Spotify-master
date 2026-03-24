@@ -1,4 +1,4 @@
-import { usePlayerStore } from "@/stores/usePlayerStore";
+import { usePlayerStore, getPlaybackType } from "@/stores/usePlayerStore";
 import { useEffect, useRef } from "react";
 import { axiosInstance } from "@/lib/axios";
 
@@ -11,9 +11,14 @@ const AudioPlayer = () => {
 
 	// handle play/pause logic
 	useEffect(() => {
+		if (getPlaybackType(currentSong) !== "local") {
+			audioRef.current?.pause();
+			return;
+		}
+
 		if (isPlaying) audioRef.current?.play();
 		else audioRef.current?.pause();
-	}, [isPlaying]);
+	}, [currentSong, isPlaying]);
 
 	// handle song ends
 	useEffect(() => {
@@ -30,7 +35,13 @@ const AudioPlayer = () => {
 
 	// handle song changes
 	useEffect(() => {
-		if (!audioRef.current || !currentSong) return;
+		if (!audioRef.current || !currentSong || getPlaybackType(currentSong) !== "local") {
+			if (audioRef.current) {
+				audioRef.current.removeAttribute("src");
+				audioRef.current.load();
+			}
+			return;
+		}
 
 		const audio = audioRef.current;
 
@@ -50,7 +61,7 @@ const AudioPlayer = () => {
 
 	// Track play count when song starts playing
 	useEffect(() => {
-		if (!currentSong || !isPlaying || hasTrackedPlay.current) return;
+		if (!currentSong || !isPlaying || hasTrackedPlay.current || getPlaybackType(currentSong) !== "local") return;
 
 		const audio = audioRef.current;
 		if (!audio) return;

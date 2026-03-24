@@ -4,6 +4,14 @@ import { useChatStore } from "./useChatStore";
 import { axiosInstance } from "@/lib/axios";
 import toast from "react-hot-toast";
 
+export const getPlaybackType = (song: Song | null) => {
+	if (!song) return "local";
+	if (song.source === "youtube_music" || song.externalVideoId) return "youtube";
+
+	const playbackUrl = song.playbackUrl || song.audioUrl || "";
+	return playbackUrl.includes("youtube.com") || playbackUrl.includes("youtu.be") ? "youtube" : "local";
+};
+
 interface PlayerStore {
 	currentSong: Song | null;
 	isPlaying: boolean;

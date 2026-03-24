@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { usePlayerStore } from "@/stores/usePlayerStore";
+import { usePlayerStore, getPlaybackType } from "@/stores/usePlayerStore";
 import { Laptop2, ListMusic, Mic2, Pause, Play, Repeat, Shuffle, SkipBack, SkipForward, Volume1, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -23,6 +23,7 @@ export const PlaybackControls = () => {
 		isQueueOpen,
 		toggleQueuePanel,
 	} = usePlayerStore();
+	const isYouTubePlayback = getPlaybackType(currentSong) === "youtube";
 
 	const [volume, setVolume] = useState(75);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -30,6 +31,13 @@ export const PlaybackControls = () => {
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 
 	useEffect(() => {
+		if (isYouTubePlayback) {
+			setCurrentTime(0);
+			setDuration(0);
+			audioRef.current = null;
+			return;
+		}
+
 		audioRef.current = document.querySelector("audio");
 
 		const audio = audioRef.current;
@@ -45,7 +53,7 @@ export const PlaybackControls = () => {
 			audio.removeEventListener("timeupdate", updateTime);
 			audio.removeEventListener("loadedmetadata", updateDuration);
 		};
-	}, [currentSong]);
+	}, [currentSong, isYouTubePlayback]);
 
 	const handleSeek = (value: number[]) => {
 		if (audioRef.current) {
@@ -132,15 +140,21 @@ export const PlaybackControls = () => {
 					</div>
 
 					<div className='hidden w-full items-center gap-2 sm:flex'>
-						<div className='text-xs text-zinc-400'>{formatTime(currentTime)}</div>
-						<Slider
-							value={[currentTime]}
-							max={duration || 100}
-							step={1}
-							className='w-full active:cursor-grabbing hover:cursor-grab'
-							onValueChange={handleSeek}
-						/>
-						<div className='text-xs text-zinc-400'>{formatTime(duration)}</div>
+						{isYouTubePlayback ? (
+							<div className='w-full text-center text-xs uppercase tracking-[0.2em] text-zinc-500'>YouTube playback</div>
+						) : (
+							<>
+								<div className='text-xs text-zinc-400'>{formatTime(currentTime)}</div>
+								<Slider
+									value={[currentTime]}
+									max={duration || 100}
+									step={1}
+									className='w-full active:cursor-grabbing hover:cursor-grab'
+									onValueChange={handleSeek}
+								/>
+								<div className='text-xs text-zinc-400'>{formatTime(duration)}</div>
+							</>
+						)}
 					</div>
 				</div>
 
@@ -155,23 +169,25 @@ export const PlaybackControls = () => {
 						<Laptop2 className='h-4 w-4' />
 					</Button>
 
-					<div className='flex items-center gap-2'>
-						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white'>
-							<Volume1 className='h-4 w-4' />
-						</Button>
-						<Slider
-							value={[volume]}
-							max={100}
-							step={1}
-							className='w-24 active:cursor-grabbing hover:cursor-grab'
-							onValueChange={(value) => {
-								setVolume(value[0]);
-								if (audioRef.current) {
-									audioRef.current.volume = value[0] / 100;
-								}
-							}}
-						/>
-					</div>
+					{!isYouTubePlayback && (
+						<div className='flex items-center gap-2'>
+							<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white'>
+								<Volume1 className='h-4 w-4' />
+							</Button>
+							<Slider
+								value={[volume]}
+								max={100}
+								step={1}
+								className='w-24 active:cursor-grabbing hover:cursor-grab'
+								onValueChange={(value) => {
+									setVolume(value[0]);
+									if (audioRef.current) {
+										audioRef.current.volume = value[0] / 100;
+									}
+								}}
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 		</footer>

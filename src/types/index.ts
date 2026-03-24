@@ -13,6 +13,9 @@ export interface Song {
 	totalPlays?: number;
 	isApproved?: boolean;
 	uploadedBy?: string | User;
+	source?: string;
+	externalVideoId?: string | null;
+	playbackUrl?: string | null;
 }
 
 export interface Album {
@@ -182,4 +185,28 @@ export interface Notification {
 	metadata?: Record<string, unknown>;
 	createdAt: string;
 	updatedAt: string;
+}
+
+export interface PublicMusicSong {
+	videoId: string;
+	title: string;
+	artist: string;
+	album: string | null;
+	duration: number | null;
+	thumbnailUrl: string;
+	rank?: number | null;
+	internalSongId?: string | null;
+}
+
+export interface PublicMusicChartResponse {
+	scope: "global" | "region";
+	region: string | null;
+	sourceQuery: string;
+	playlist: {
+		name: string;
+		playlistId: string;
+		artist: string;
+		thumbnailUrl: string;
+	};
+	songs: PublicMusicSong[];
 }

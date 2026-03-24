@@ -23,6 +23,7 @@ const EditSongDialog = ({ song }: EditSongDialogProps) => {
 const { albums, updateSong } = useMusicStore();
 	const [songDialogOpen, setSongDialogOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [albumSearch, setAlbumSearch] = useState("");
 
 	const [updatedSong, setUpdatedSong] = useState({
 		title: song.title,
@@ -40,7 +41,7 @@ const { albums, updateSong } = useMusicStore();
 	const audioInputRef = useRef<HTMLInputElement>(null);
 	const imageInputRef = useRef<HTMLInputElement>(null);
 
-	const handleSubmit = async () => {
+const handleSubmit = async () => {
 	setIsLoading(true);
 
 	const formData = new FormData();
@@ -61,6 +62,10 @@ const { albums, updateSong } = useMusicStore();
 	setSongDialogOpen(false);
 	setIsLoading(false);
 };
+
+	const filteredAlbums = albums.filter((album) =>
+		album.title.toLowerCase().includes(albumSearch.trim().toLowerCase())
+	);
 
 
 	return (
@@ -171,6 +176,12 @@ const { albums, updateSong } = useMusicStore();
 
 					<div className='space-y-2'>
 						<label className='text-sm font-medium'>Album (Optional)</label>
+						<Input
+							value={albumSearch}
+							onChange={(e) => setAlbumSearch(e.target.value)}
+							className='bg-zinc-800 border-zinc-700'
+							placeholder='Search album'
+						/>
 						<Select
 							value={updatedSong.album}
 							onValueChange={(value) => setUpdatedSong({ ...updatedSong, album: value })}
@@ -180,7 +191,7 @@ const { albums, updateSong } = useMusicStore();
 							</SelectTrigger>
 							<SelectContent className='bg-zinc-800 border-zinc-700'>
 								<SelectItem value='none'>No Album (Single)</SelectItem>
-								{albums.map((album) => (
+								{filteredAlbums.map((album) => (
 									<SelectItem key={album._id} value={album._id}>
 										{album.title}
 									</SelectItem>

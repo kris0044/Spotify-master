@@ -1,6 +1,8 @@
 import FeaturedGridSkeleton from "@/components/skeletons/FeaturedGridSkeleton";
 import { Song } from "@/types";
 import { useMusicStore } from "@/stores/useMusicStore";
+import SongActions from "@/components/SongActions";
+import { SignedIn } from "@clerk/clerk-react";
 import PlayButton from "./PlayButton";
 
 interface FeaturedSectionProps {
@@ -38,6 +40,13 @@ const FeaturedSection = ({ songs }: FeaturedSectionProps) => {
 						}}
 					/>
 					<div className='relative flex items-center gap-4 p-4'>
+						<SignedIn>
+							<div className='absolute right-4 top-4 z-20'>
+								<div className='rounded-full border border-white/10 bg-black/50 p-1 backdrop-blur-md'>
+									<SongActions song={song} showPlaylist={false} showFollow={false} />
+								</div>
+							</div>
+						</SignedIn>
 						<img
 							src={song.imageUrl}
 							alt={song.title}

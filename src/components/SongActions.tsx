@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Bell, BellOff, Heart, ListPlus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useFavoriteStore } from "@/stores/useFavoriteStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useFollowStore } from "@/stores/useFollowStore";
@@ -40,6 +41,7 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 	const [isFollowingState, setIsFollowingState] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+	const [playlistSearch, setPlaylistSearch] = useState("");
 
 	useEffect(() => {
 		if (showFavorite) {
@@ -64,6 +66,10 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 			fetchPlaylists();
 		}
 	}, [showPlaylist, isDialogOpen, fetchPlaylists]);
+
+	const filteredPlaylists = playlists.filter((playlist) =>
+		playlist.name.toLowerCase().includes(playlistSearch.trim().toLowerCase())
+	);
 
 	const handleFavoriteToggle = async () => {
 		if (isFavoriteState) {
@@ -128,12 +134,17 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 							<DialogTitle>Add to Playlist</DialogTitle>
 							<DialogDescription>Select a playlist to add this song to.</DialogDescription>
 						</DialogHeader>
+						<Input
+							value={playlistSearch}
+							onChange={(event) => setPlaylistSearch(event.target.value)}
+							placeholder='Search playlists'
+						/>
 						<Select value={selectedPlaylistId} onValueChange={setSelectedPlaylistId}>
 							<SelectTrigger>
 								<SelectValue placeholder='Select a playlist' />
 							</SelectTrigger>
 							<SelectContent>
-								{playlists.map((playlist) => (
+								{filteredPlaylists.map((playlist) => (
 									<SelectItem key={playlist._id} value={playlist._id}>
 										{playlist.name}
 									</SelectItem>
