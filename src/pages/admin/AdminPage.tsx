@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import Header from "./components/Header";
-import { Album, Music, Clock, Users } from "lucide-react";
+import { Album, Music, Clock, Users, Heart, Mail } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SongsTabContent from "./components/SongsTabContent";
 import AlbumsTabContent from "./components/AlbumsTabContent";
@@ -9,6 +9,8 @@ import UsersTabContent from "./components/UsersTabContent";
 import { useEffect } from "react";
 import { useMusicStore } from "@/stores/useMusicStore";
 import AdminOverview from "./components/AdminOverview";
+import UserInsightsTabContent from "./components/UserInsightsTabContent";
+import CommunityInsightsTabContent from "./components/CommunityInsightsTabContent";
 
 const AdminPage = () => {
 	const { isAdmin, isLoading } = useAuthStore();
@@ -53,6 +55,14 @@ const AdminPage = () => {
 						<Users className='mr-2 size-4' />
 						Users
 					</TabsTrigger>
+					<TabsTrigger value='insights' className='data-[state=active]:bg-zinc-700'>
+						<Heart className='mr-2 size-4' />
+						User Insights
+					</TabsTrigger>
+					<TabsTrigger value='community' className='data-[state=active]:bg-zinc-700'>
+						<Mail className='mr-2 size-4' />
+						Community
+					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value='songs'>
@@ -66,6 +76,12 @@ const AdminPage = () => {
 				</TabsContent>
 				<TabsContent value='users'>
 					<UsersTabContent />
+				</TabsContent>
+				<TabsContent value='insights'>
+					<UserInsightsTabContent />
+				</TabsContent>
+				<TabsContent value='community'>
+					<CommunityInsightsTabContent />
 				</TabsContent>
 			</Tabs>
 		</div>

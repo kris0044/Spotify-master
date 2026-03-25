@@ -6,6 +6,7 @@ import { ArrowUpRight, Disc3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import PlayButton from "./PlayButton";
 import SectionGridSkeleton from "./SectionGridSkeleton";
+import { buildSongDetailHref } from "@/lib/songDetail";
 
 type SectionGridProps = {
 	title: string;
@@ -57,11 +58,13 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
 								}}
 							/>
 							<div className='aspect-square overflow-hidden rounded-[22px] shadow-xl ring-1 ring-white/10'>
-								<img
-									src={song.imageUrl}
-									alt={song.title}
-									className='h-full w-full object-cover transition duration-500 group-hover:scale-105'
-								/>
+								<Link to={buildSongDetailHref(song)} state={{ song }}>
+									<img
+										src={song.imageUrl}
+										alt={song.title}
+										className='h-full w-full object-cover transition duration-500 group-hover:scale-105'
+									/>
+								</Link>
 							</div>
 							<PlayButton song={song} />
 							<SignedIn>
@@ -77,8 +80,10 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
 						</div>
 
 						<div className='space-y-2'>
-							<h3 className='truncate text-lg font-semibold text-white'>{song.title}</h3>
-							<p className='truncate text-sm text-zinc-400'>{song.artist}</p>
+							<Link to={buildSongDetailHref(song)} state={{ song }} className='block'>
+								<h3 className='truncate text-lg font-semibold text-white transition group-hover:text-emerald-300'>{song.title}</h3>
+								<p className='truncate text-sm text-zinc-400'>{song.artist}</p>
+							</Link>
 						</div>
 					</div>
 				))}

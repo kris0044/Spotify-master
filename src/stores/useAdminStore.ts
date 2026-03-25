@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
-import { Song, Album, User, AdminAnalytics, AnalyticsRange } from "@/types";
+import { Song, Album, User, AdminAnalytics, AnalyticsRange, AdminUserInsights, AdminCommunityInsights } from "@/types";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 import { useMusicStore } from "@/stores/useMusicStore";
@@ -9,6 +9,8 @@ interface AdminStore {
 	pendingAlbums: Album[];
 	users: User[];
 	analytics: AdminAnalytics | null;
+	userInsights: AdminUserInsights | null;
+	communityInsights: AdminCommunityInsights | null;
 	isLoading: boolean;
 	error: string | null;
 
@@ -16,6 +18,8 @@ interface AdminStore {
 	fetchPendingAlbums: () => Promise<void>;
 	fetchUsers: () => Promise<void>;
 	fetchAnalytics: (range: AnalyticsRange) => Promise<void>;
+	fetchUserInsights: () => Promise<void>;
+	fetchCommunityInsights: () => Promise<void>;
 	approveSong: (id: string) => Promise<void>;
 	rejectSong: (id: string) => Promise<void>;
 	approveAlbum: (id: string) => Promise<void>;
@@ -30,6 +34,8 @@ export const useAdminStore = create<AdminStore>((set) => ({
 	pendingAlbums: [],
 	users: [],
 	analytics: null,
+	userInsights: null,
+	communityInsights: null,
 	isLoading: false,
 	error: null,
 
@@ -81,6 +87,34 @@ export const useAdminStore = create<AdminStore>((set) => ({
 			set({ analytics: response.data });
 		} catch (error: any) {
 			const errorMsg = error.response?.data?.message || "Failed to fetch dashboard analytics";
+			set({ error: errorMsg });
+			toast.error(errorMsg);
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	fetchUserInsights: async () => {
+		set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.get<AdminUserInsights>("/admin/user-insights");
+			set({ userInsights: response.data });
+		} catch (error: any) {
+			const errorMsg = error.response?.data?.message || "Failed to fetch user insights";
+			set({ error: errorMsg });
+			toast.error(errorMsg);
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	fetchCommunityInsights: async () => {
+		set({ isLoading: true, error: null });
+		try {
+			const response = await axiosInstance.get<AdminCommunityInsights>("/admin/community-insights");
+			set({ communityInsights: response.data });
+		} catch (error: any) {
+			const errorMsg = error.response?.data?.message || "Failed to fetch community insights";
 			set({ error: errorMsg });
 			toast.error(errorMsg);
 		} finally {
@@ -197,7 +231,16 @@ export const useAdminStore = create<AdminStore>((set) => ({
 	},
 
 	reset: () => {
-		set({ pendingSongs: [], pendingAlbums: [], users: [], analytics: null, isLoading: false, error: null });
+		set({
+			pendingSongs: [],
+			pendingAlbums: [],
+			users: [],
+			analytics: null,
+			userInsights: null,
+			communityInsights: null,
+			isLoading: false,
+			error: null,
+		});
 	},
 }));
 

@@ -17,6 +17,7 @@ import LoginPage from "./pages/login/LoginPage";
 import PlaylistDetailPage from "./pages/playlists/PlaylistDetailPage";
 import PlaylistsPage from "./pages/playlists/PlaylistsPage";
 import AllSongsPage from "./pages/songs/AllSongsPage";
+import SongDetailPage from "./pages/songs/SongDetailPage";
 import SignUpPage from "./pages/signup/SignUpPage";
 import NotificationsPage from "./pages/notifications/NotificationsPage";
 import PublicMusicPage from "./pages/public-music/PublicMusicPage";
@@ -39,6 +40,7 @@ function App() {
 					<Route path='/' element={<HomePage />} />
 					<Route path='/albums' element={<AlbumsPage />} />
 					<Route path='/songs' element={<AllSongsPage />} />
+					<Route path='/songs/:songId' element={<SongDetailPage />} />
 					<Route path='/chat' element={<ChatPage />} />
 					<Route path='/community' element={<CommunityPage />} />
 					<Route path='/albums/:albumId' element={<AlbumPage />} />

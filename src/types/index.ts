@@ -89,6 +89,117 @@ export interface AdminAnalytics {
 	playsTimeline: AdminAnalyticsPoint[];
 }
 
+export interface AdminUserInsightsOverview {
+	totalPlaylists: number;
+	activePlaylistCreators: number;
+	totalFavoriteActions: number;
+	uniqueFavoritedSongs: number;
+	avgSongsPerPlaylist: number;
+}
+
+export interface AdminUserInsightsOwner {
+	_id: string;
+	clerkId: string;
+	fullName: string;
+	imageUrl: string;
+	role?: "user" | "admin" | "artist";
+	createdAt?: string;
+}
+
+export interface AdminUserInsightsPlaylistSong {
+	_id: string;
+	title: string;
+	artist: string;
+	imageUrl: string;
+	duration: number;
+	genre?: string | null;
+}
+
+export interface AdminUserInsightsPlaylist {
+	_id: string;
+	name: string;
+	description: string;
+	userId: string;
+	songCount: number;
+	totalDuration: number;
+	createdAt: string;
+	updatedAt: string;
+	owner: AdminUserInsightsOwner | null;
+	songs: AdminUserInsightsPlaylistSong[];
+}
+
+export interface AdminUserInsightsFavoriteSong {
+	_id: string;
+	title: string;
+	artist: string;
+	imageUrl: string;
+	genre?: string | null;
+	source?: string;
+	playCount?: number;
+	duration: number;
+	favoritesCount: number;
+	lastFavoritedAt: string;
+	uploadedBy?: AdminUserInsightsOwner | null;
+}
+
+export interface AdminUserInsights {
+	overview: AdminUserInsightsOverview;
+	playlists: AdminUserInsightsPlaylist[];
+	topFavoritedSongs: AdminUserInsightsFavoriteSong[];
+}
+
+export interface AdminCommunitySubscriber {
+	_id: string;
+	clerkId: string;
+	fullName: string;
+	imageUrl: string;
+	role?: "user" | "admin" | "artist";
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface AdminCommunityFeedbackAuthor {
+	_id: string;
+	clerkId: string;
+	fullName: string;
+	imageUrl: string;
+	role?: "user" | "admin" | "artist";
+}
+
+export interface AdminCommunityFeedbackItem {
+	_id: string;
+	content: string;
+	category: "general" | "song" | "album" | "feature";
+	createdAt: string;
+	author: AdminCommunityFeedbackAuthor | null;
+	likesCount: number;
+	commentsCount: number;
+	song?: Pick<Song, "_id" | "title" | "artist" | "imageUrl"> | null;
+	album?: Pick<Album, "_id" | "title" | "artist" | "imageUrl"> | null;
+}
+
+export interface AdminCommunityAuthorSummary {
+	author: AdminCommunityFeedbackAuthor | null;
+	feedbackCount: number;
+	totalLikes: number;
+	totalComments: number;
+	lastFeedbackAt: string;
+}
+
+export interface AdminCommunityInsightsOverview {
+	newsletterSubscribers: number;
+	totalFeedback: number;
+	totalFeedbackLikes: number;
+	totalFeedbackComments: number;
+}
+
+export interface AdminCommunityInsights {
+	overview: AdminCommunityInsightsOverview;
+	subscribers: AdminCommunitySubscriber[];
+	feedback: AdminCommunityFeedbackItem[];
+	topAuthors: AdminCommunityAuthorSummary[];
+}
+
 export interface Message {
 	_id: string;
 	senderId: string;

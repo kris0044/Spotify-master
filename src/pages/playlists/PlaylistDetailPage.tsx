@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { resolvePublicMusicSong, searchUnifiedSongs } from "@/lib/ytMusic";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useMusicStore } from "@/stores/useMusicStore";
@@ -26,6 +26,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { buildSongDetailHref } from "@/lib/songDetail";
 
 const PlaylistDetailPage = () => {
 	const { id } = useParams<{ id: string }>();
@@ -253,11 +254,13 @@ const PlaylistDetailPage = () => {
 															<X className='size-4' />
 														</Button>
 														<div className='aspect-square overflow-hidden rounded-[22px] shadow-xl ring-1 ring-white/10'>
-															<img
-																src={playlistSong.imageUrl}
-																alt={playlistSong.title}
-																className='h-full w-full object-cover transition duration-500 group-hover:scale-105'
-															/>
+															<Link to={buildSongDetailHref(playlistSong)} state={{ song: playlistSong }}>
+																<img
+																	src={playlistSong.imageUrl}
+																	alt={playlistSong.title}
+																	className='h-full w-full object-cover transition duration-500 group-hover:scale-105'
+																/>
+															</Link>
 														</div>
 														<Button
 															size='icon'
@@ -271,8 +274,10 @@ const PlaylistDetailPage = () => {
 													</div>
 
 													<div className='space-y-2'>
-														<h3 className='truncate text-lg font-semibold text-white'>{playlistSong.title}</h3>
-														<p className='truncate text-sm text-zinc-400'>{playlistSong.artist}</p>
+														<Link to={buildSongDetailHref(playlistSong)} state={{ song: playlistSong }} className='block'>
+															<h3 className='truncate text-lg font-semibold text-white transition group-hover:text-emerald-300'>{playlistSong.title}</h3>
+															<p className='truncate text-sm text-zinc-400'>{playlistSong.artist}</p>
+														</Link>
 														<p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
 															{playlistSong.duration ? `${Math.floor(playlistSong.duration / 60)}:${(playlistSong.duration % 60).toString().padStart(2, "0")}` : "Unknown duration"}
 														</p>
