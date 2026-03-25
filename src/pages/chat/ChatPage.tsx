@@ -8,13 +8,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import MessageInput from "./components/MessageInput";
 
-const formatTime = (date: string) => {
-	return new Date(date).toLocaleTimeString("en-US", {
+const formatTime = (date: string) =>
+	new Date(date).toLocaleTimeString("en-US", {
 		hour: "2-digit",
 		minute: "2-digit",
 		hour12: true,
 	});
-};
+
+const formatMessageDay = (date: string) =>
+	new Date(date).toLocaleDateString("en-US", {
+		day: "2-digit",
+		month: "short",
+		year: "numeric",
+	});
+
+const isSameDay = (firstDate: string, secondDate: string) =>
+	new Date(firstDate).toDateString() === new Date(secondDate).toDateString();
 
 const ChatPage = () => {
 	const { user } = useUser();
@@ -46,35 +55,49 @@ const ChatPage = () => {
 							{/* Messages */}
 							<ScrollArea className='h-[calc(100vh-340px)]'>
 								<div className='p-4 space-y-4'>
-									{messages.map((message) => (
-										<div
-											key={message._id}
-											className={`flex items-start gap-3 ${
-												message.senderId === user?.id ? "flex-row-reverse" : ""
-											}`}
-										>
-											<Avatar className='size-8'>
-												<AvatarImage
-													src={
-														message.senderId === user?.id
-															? user.imageUrl
-															: selectedUser.imageUrl
-													}
-												/>
-											</Avatar>
+									{messages.map((message, index) => {
+										const showDateDivider =
+											index === 0 || !isSameDay(messages[index - 1].createdAt, message.createdAt);
 
-											<div
-												className={`rounded-lg p-3 max-w-[70%]
-													${message.senderId === user?.id ? "bg-green-500" : "bg-zinc-800"}
-												`}
-											>
-												<p className='text-sm'>{message.content}</p>
-												<span className='text-xs text-zinc-300 mt-1 block'>
-													{formatTime(message.createdAt)}
-												</span>
+										return (
+											<div key={message._id}>
+												{showDateDivider ? (
+													<div className='flex justify-center py-2'>
+														<span className='rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300'>
+															{formatMessageDay(message.createdAt)}
+														</span>
+													</div>
+												) : null}
+
+												<div
+													className={`flex items-start gap-3 ${
+														message.senderId === user?.id ? "flex-row-reverse" : ""
+													}`}
+												>
+													<Avatar className='size-8'>
+														<AvatarImage
+															src={
+																message.senderId === user?.id
+																	? user.imageUrl
+																	: selectedUser.imageUrl
+															}
+														/>
+													</Avatar>
+
+													<div
+														className={`rounded-lg p-3 max-w-[70%]
+															${message.senderId === user?.id ? "bg-green-500" : "bg-zinc-800"}
+														`}
+													>
+														<p className='text-sm'>{message.content}</p>
+														<span className='text-xs text-zinc-300 mt-1 block'>
+															{formatTime(message.createdAt)}
+														</span>
+													</div>
+												</div>
 											</div>
-										</div>
-									))}
+										);
+									})}
 								</div>
 							</ScrollArea>
 

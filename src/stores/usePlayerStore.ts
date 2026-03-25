@@ -48,6 +48,13 @@ const updateActivity = (song: Song | null, isPlaying: boolean) => {
 		socket.emit("update_activity", {
 			userId: socket.auth.userId,
 			activity: isPlaying && song ? `Playing ${song.title} by ${song.artist}` : "Idle",
+			song: isPlaying && song
+				? {
+					title: song.title,
+					artist: song.artist,
+					imageUrl: song.imageUrl,
+				}
+				: null,
 		});
 	}
 };

@@ -36,6 +36,19 @@ const UsersList = () => {
 
 									<div className='flex-1 min-w-0 lg:block hidden'>
 										<span className='font-medium truncate'>{user.fullName}</span>
+										<p className='text-xs text-zinc-400 truncate'>
+											{onlineUsers.has(user.clerkId) || user.isOnline
+												? user.currentSong?.title
+													? `Listening to ${user.currentSong.title}`
+													: "Online"
+												: user.lastSeenAt
+													? `Last seen ${new Date(user.lastSeenAt).toLocaleTimeString("en-US", {
+														hour: "2-digit",
+														minute: "2-digit",
+														hour12: true,
+													})}`
+													: "Offline"}
+										</p>
 									</div>
 								</div>
 							))

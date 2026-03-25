@@ -1,6 +1,24 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useChatStore } from "@/stores/useChatStore";
 
+const formatPresence = (isOnline?: boolean, lastSeenAt?: string | null) => {
+	if (isOnline) {
+		return "Online";
+	}
+
+	if (!lastSeenAt) {
+		return "Offline";
+	}
+
+	return `Last seen ${new Date(lastSeenAt).toLocaleString("en-US", {
+		day: "2-digit",
+		month: "short",
+		hour: "2-digit",
+		minute: "2-digit",
+		hour12: true,
+	})}`;
+};
+
 const ChatHeader = () => {
 	const { selectedUser, onlineUsers } = useChatStore();
 
@@ -16,8 +34,14 @@ const ChatHeader = () => {
 				<div>
 					<h2 className='font-medium'>{selectedUser.fullName}</h2>
 					<p className='text-sm text-zinc-400'>
-						{onlineUsers.has(selectedUser.clerkId) ? "Online" : "Offline"}
+						{formatPresence(onlineUsers.has(selectedUser.clerkId) || selectedUser.isOnline, selectedUser.lastSeenAt)}
 					</p>
+					{selectedUser.currentSong?.title ? (
+						<p className='text-xs text-emerald-400'>
+							Listening to {selectedUser.currentSong.title}
+							{selectedUser.currentSong.artist ? ` • ${selectedUser.currentSong.artist}` : ""}
+						</p>
+					) : null}
 				</div>
 			</div>
 		</div>

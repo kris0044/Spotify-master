@@ -209,6 +209,12 @@ export interface Message {
 	updatedAt: string;
 }
 
+export interface UserCurrentSong {
+	title: string | null;
+	artist: string | null;
+	imageUrl?: string | null;
+}
+
 export interface User {
 	_id: string;
 	clerkId: string;
@@ -216,6 +222,10 @@ export interface User {
 	imageUrl: string;
 	role?: "user" | "admin" | "artist";
 	newsletterSubscribed?: boolean;
+	isOnline?: boolean;
+	lastSeenAt?: string | null;
+	currentActivity?: string;
+	currentSong?: UserCurrentSong | null;
 	createdAt?: string;
 	updatedAt?: string;
 }

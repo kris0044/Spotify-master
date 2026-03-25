@@ -5,6 +5,27 @@ import { useUser } from "@clerk/clerk-react";
 import { HeadphonesIcon, Music, Users } from "lucide-react";
 import { useEffect } from "react";
 
+const getActivityDisplay = (activity?: string, currentSong?: { title: string | null; artist: string | null } | null) => {
+	if (!activity || activity === "Idle") {
+		return null;
+	}
+
+	if (currentSong?.title) {
+		return {
+			title: currentSong.title,
+			artist: currentSong.artist || "Unknown artist",
+		};
+	}
+
+	const cleanedTitle = activity.replace("Playing ", "").split(" by ")[0]?.trim();
+	const cleanedArtist = activity.split(" by ")[1]?.trim();
+
+	return {
+		title: cleanedTitle || "Unknown song",
+		artist: cleanedArtist || "Unknown artist",
+	};
+};
+
 const FriendsActivity = () => {
 	const { users, fetchUsers, onlineUsers, userActivities } = useChatStore();
 	const { user } = useUser();
@@ -28,7 +49,8 @@ const FriendsActivity = () => {
 				<div className='p-4 space-y-4'>
 					{users.map((user) => {
 						const activity = userActivities.get(user.clerkId);
-						const isPlaying = activity && activity !== "Idle";
+						const activityDisplay = getActivityDisplay(activity || user.currentActivity, user.currentSong);
+						const isPlaying = Boolean(activityDisplay);
 
 						return (
 							<div
@@ -58,10 +80,10 @@ const FriendsActivity = () => {
 										{isPlaying ? (
 											<div className='mt-1'>
 												<div className='mt-1 text-sm text-white font-medium truncate'>
-													{activity.replace("Playing ", "").split(" by ")[0]}
+													{activityDisplay?.title}
 												</div>
 												<div className='text-xs text-zinc-400 truncate'>
-													{activity.split(" by ")[1]}
+													{activityDisplay?.artist}
 												</div>
 											</div>
 										) : (

@@ -25,6 +25,7 @@ interface MusicStore {
 	fetchStats: () => Promise<void>;
 	fetchSongs: () => Promise<void>;
 	updateSong: (id: string, data: FormData) => Promise<void>;
+	updateAlbum: (id: string, data: FormData) => Promise<void>;
 
   fetchAllSongs: (limit: number, offset: number, search?: string, genre?: string) => Promise<void>; // Added for pagination and search
 	deleteSong: (id: string) => Promise<void>;
@@ -49,26 +50,43 @@ export const useMusicStore = create<MusicStore>((set) => ({
 		totalArtists: 0,
 	},
 	updateSong: async (id, formData) => {
-	set({ isLoading: true, error: null });
-	try {
-		const res = await axiosInstance.put(`/admin/songs/${id}`, formData, {
-			headers: { "Content-Type": "multipart/form-data" },
-		});
+		set({ isLoading: true, error: null });
+		try {
+			const res = await axiosInstance.put(`/admin/songs/${id}`, formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
 
-		set((state) => ({
-			songs: state.songs.map((song) =>
-				song._id === id ? res.data : song
-			),
-		}));
+			set((state) => ({
+				songs: state.songs.map((song) => (song._id === id ? res.data : song)),
+			}));
 
-		toast.success("Song updated successfully");
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (error: any) {
-		toast.error("Failed to update song");
-	} finally {
-		set({ isLoading: false });
-	}
-},
+			toast.success("Song updated successfully");
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		} catch (error: any) {
+			toast.error("Failed to update song");
+		} finally {
+			set({ isLoading: false });
+		}
+	},
+
+	updateAlbum: async (id, formData) => {
+		set({ isLoading: true, error: null });
+		try {
+			const res = await axiosInstance.put(`/admin/albums/${id}`, formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
+
+			set((state) => ({
+				albums: state.albums.map((album) => (album._id === id ? { ...album, ...res.data } : album)),
+			}));
+
+			toast.success("Album updated successfully");
+		} catch (error: any) {
+			toast.error(error.response?.data?.message || "Failed to update album");
+		} finally {
+			set({ isLoading: false });
+		}
+	},
 
 	deleteSong: async (id) => {
 		set({ isLoading: true, error: null });
@@ -93,9 +111,7 @@ export const useMusicStore = create<MusicStore>((set) => ({
 			await axiosInstance.delete(`/admin/albums/${id}`);
 			set((state) => ({
 				albums: state.albums.filter((album) => album._id !== id),
-				songs: state.songs.map((song) =>
-					song.albumId === state.albums.find((a) => a._id === id)?.title ? { ...song, album: null } : song
-				),
+				songs: state.songs.map((song) => (song.albumId === id ? { ...song, albumId: null } : song)),
 			}));
 			toast.success("Album deleted successfully");
 		} catch (error: any) {
