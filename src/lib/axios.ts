@@ -1,9 +1,15 @@
 import axios from "axios";
 
-export const axiosInstance = axios.create({
-	// baseURL: "http://localhost:5000/api",
-	  baseURL: "https://spotify-master-backend-9di9.onrender.com/api",
+const apiBaseURL =
+	import.meta.env.VITE_API_URL ||
+	(
+		import.meta.env.MODE === "development"
+			? "http://localhost:5000/api"
+			: "https://spotify-master-backend-9di9.onrender.com/api"
+	);
 
+export const axiosInstance = axios.create({
+	baseURL: apiBaseURL,
 });
 
 let tokenGetter: (() => Promise<string | null>) | null = null;

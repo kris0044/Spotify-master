@@ -31,8 +31,13 @@ interface ChatStore {
 	setSelectedUser: (user: User | null) => void;
 }
 
-const baseURL = import.meta.env.MODE === "development" ? "https://spotify-master-backend-9di9.onrender.com" : "/";
-// const baseURL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+const baseURL =
+	import.meta.env.VITE_SOCKET_URL ||
+	(
+		import.meta.env.MODE === "development"
+			? "http://localhost:5000"
+			: "https://spotify-master-backend-9di9.onrender.com"
+	);
 
 const socket = io(baseURL, {
 	autoConnect: false, // only connect if user is authenticated
@@ -95,7 +100,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
 			socket.on("connect_error", (error: Error) => {
 				console.error("Socket connection error:", error.message);
-				toast.error("Chat connection failed");
+				toast.error(error.message ? `Chat connection failed: ${error.message}` : "Chat connection failed");
 				set({ isConnected: false });
 			});
 
