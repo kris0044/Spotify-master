@@ -24,15 +24,15 @@ const LeftSidebar = () => {
 		<div className='h-full flex flex-col gap-2'>
 			{/* Navigation menu */}
 
-			<div className='rounded-lg bg-zinc-900 p-4'>
-				<ScrollArea className='h-[350px] pr-2'>
+			<div className='rounded-lg bg-zinc-900 p-2 md:p-4'>
+				<ScrollArea className='h-[320px] pr-1 md:h-[350px] md:pr-2'>
 					<div className='space-y-2'>
 						<Link
 							to={"/"}
 							className={cn(
 								buttonVariants({
 									variant: "ghost",
-									className: "w-full justify-start text-white hover:bg-zinc-800",
+									className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 								})
 							)}
 						>
@@ -46,7 +46,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -58,7 +58,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -70,7 +70,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -82,7 +82,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -94,7 +94,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -106,7 +106,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -118,7 +118,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -130,7 +130,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -142,7 +142,7 @@ const LeftSidebar = () => {
 								className={cn(
 									buttonVariants({
 										variant: "ghost",
-										className: "w-full justify-start text-white hover:bg-zinc-800",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 									})
 								)}
 							>
@@ -155,7 +155,7 @@ const LeftSidebar = () => {
 									className={cn(
 										buttonVariants({
 											variant: "ghost",
-											className: "w-full justify-start text-white hover:bg-zinc-800",
+											className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 										})
 									)}
 								>
@@ -169,7 +169,7 @@ const LeftSidebar = () => {
 									className={cn(
 										buttonVariants({
 											variant: "ghost",
-											className: "w-full justify-start text-white hover:bg-zinc-800",
+											className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
 										})
 									)}
 								>
@@ -183,7 +183,7 @@ const LeftSidebar = () => {
 			</div>
 
 			{/* Library section */}
-			<div className='flex-1 rounded-lg bg-zinc-900 p-4'>
+			<div className='flex-1 rounded-lg bg-zinc-900 p-2 md:p-4'>
 				<div className='flex items-center justify-between mb-4'>
 					<div className='flex items-center text-white px-2'>
 						<Library className='size-5 mr-2' />
@@ -191,7 +191,7 @@ const LeftSidebar = () => {
 					</div>
 				</div>
 
-				<ScrollArea className='h-[350px] pr-2'>
+				<ScrollArea className='h-[calc(100vh-470px)] min-h-[200px] pr-1 md:h-[350px] md:pr-2'>
 					<div className='space-y-2'>
 						<SignedIn>
 							{playlists.map((playlist) => (

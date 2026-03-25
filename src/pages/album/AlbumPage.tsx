@@ -91,11 +91,11 @@ const AlbumPage = () => {
 							</Button>
 						</div>
 
-						<div className='flex flex-col gap-6 p-6 pb-8 lg:flex-row'>
+						<div className='flex flex-col gap-6 p-4 pb-8 sm:p-6 lg:flex-row'>
 							<img
 								src={currentAlbum.imageUrl}
 								alt={currentAlbum.title}
-								className='h-[240px] w-[240px] rounded-2xl object-cover shadow-2xl'
+								className='h-[220px] w-[220px] self-center rounded-2xl object-cover shadow-2xl sm:h-[240px] sm:w-[240px] lg:self-auto'
 							/>
 							<div className='flex flex-col justify-end'>
 								<p className='text-sm font-medium uppercase tracking-[0.24em] text-zinc-300'>Album</p>
@@ -124,7 +124,7 @@ const AlbumPage = () => {
 						</div>
 
 						<div className='bg-black/20 backdrop-blur-sm'>
-							<div className='grid grid-cols-[16px_4fr_2fr_1fr] gap-4 border-b border-white/5 px-10 py-3 text-sm text-zinc-400'>
+							<div className='hidden grid-cols-[16px_4fr_2fr_1fr] gap-4 border-b border-white/5 px-10 py-3 text-sm text-zinc-400 md:grid'>
 								<div>#</div>
 								<div>Title</div>
 								<div>Released Date</div>
@@ -142,7 +142,7 @@ const AlbumPage = () => {
 											<div
 												key={song._id}
 												onClick={() => handlePlaySong(index)}
-												className='group grid cursor-pointer grid-cols-[16px_4fr_2fr_1fr] gap-4 rounded-md px-4 py-2 text-sm text-zinc-400 hover:bg-white/5'
+												className='group cursor-pointer rounded-md px-3 py-3 text-sm text-zinc-400 hover:bg-white/5 md:grid md:grid-cols-[16px_4fr_2fr_1fr] md:gap-4 md:px-4 md:py-2'
 											>
 												<div className='flex items-center justify-center'>
 													{isCurrentSong && isPlaying ? (
@@ -160,8 +160,14 @@ const AlbumPage = () => {
 														<div>{song.artist}</div>
 													</div>
 												</div>
-												<div className='flex items-center'>{song.createdAt.split("T")[0]}</div>
-												<div className='flex items-center'>{formatDuration(song.duration)}</div>
+												<div className='mt-2 flex items-center justify-between text-xs text-zinc-500 md:mt-0 md:text-sm md:text-zinc-400'>
+													<span className='md:hidden'>Released</span>
+													<span>{song.createdAt.split("T")[0]}</span>
+												</div>
+												<div className='flex items-center justify-between text-xs text-zinc-500 md:text-sm md:text-zinc-400'>
+													<span className='md:hidden'>Duration</span>
+													<span>{formatDuration(song.duration)}</span>
+												</div>
 											</div>
 										);
 									})}

@@ -32,7 +32,7 @@ export const usePlaylistStore = create<PlaylistStore>((set) => ({
 			set({ playlists: response.data });
 		} catch (error: any) {
 			set({ error: error.response?.data?.message || "Failed to fetch playlists" });
-			toast.error("Failed to fetch playlists");
+			// toast.error("Failed to fetch playlists");
 		} finally {
 			set({ isLoading: false });
 		}

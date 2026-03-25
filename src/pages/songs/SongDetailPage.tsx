@@ -233,8 +233,8 @@ const SongDetailPage = () => {
 			<ScrollArea className='h-[calc(100vh-180px)]'>
 				<div className='p-4 sm:p-6'>
 					<section className='overflow-hidden rounded-[30px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(59,130,246,0.16),_transparent_24%),linear-gradient(160deg,_rgba(24,24,27,0.98),_rgba(9,9,11,0.98))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.32)]'>
-						<div className='grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]'>
-							<div className='overflow-hidden rounded-[28px] border border-white/10 bg-black/30 shadow-2xl'>
+						<div className='grid gap-6 lg:gap-8 lg:grid-cols-[360px_minmax(0,1fr)]'>
+							<div className='mx-auto w-full max-w-[360px] overflow-hidden rounded-[28px] border border-white/10 bg-black/30 shadow-2xl'>
 								<img src={song.imageUrl} alt={song.title} className='aspect-square h-full w-full object-cover' />
 							</div>
 
@@ -285,19 +285,19 @@ const SongDetailPage = () => {
 								</div>
 
 								<div className='flex flex-wrap items-center gap-3'>
-									<Button onClick={handlePlay} className='bg-green-500 text-black hover:bg-green-400'>
+									<Button onClick={handlePlay} className='w-full bg-green-500 text-black hover:bg-green-400 sm:w-auto'>
 										{isCurrentSong && isPlaying ? <Pause className='mr-2 h-4 w-4' /> : <Play className='mr-2 h-4 w-4' />}
 										{isCurrentSong && isPlaying ? "Pause" : "Play"}
 									</Button>
 									<div className='rounded-full border border-white/10 bg-white/5 p-1'>
 										<SongActions song={song} />
 									</div>
-									<Button variant='outline' onClick={handleCopyLink} className='border-white/10 bg-white/5 text-zinc-100 hover:bg-white/10'>
+									<Button variant='outline' onClick={handleCopyLink} className='w-full border-white/10 bg-white/5 text-zinc-100 hover:bg-white/10 sm:w-auto'>
 										<Copy className='mr-2 h-4 w-4' />
 										Copy Link
 									</Button>
 									{song.playbackUrl ? (
-										<Button asChild variant='outline' className='border-white/10 bg-white/5 text-zinc-100 hover:bg-white/10'>
+										<Button asChild variant='outline' className='w-full border-white/10 bg-white/5 text-zinc-100 hover:bg-white/10 sm:w-auto'>
 											<a href={song.playbackUrl} target='_blank' rel='noreferrer'>
 												<ExternalLink className='mr-2 h-4 w-4' />
 												Open Source

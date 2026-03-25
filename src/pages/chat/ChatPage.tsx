@@ -27,7 +27,7 @@ const isSameDay = (firstDate: string, secondDate: string) =>
 
 const ChatPage = () => {
 	const { user } = useUser();
-	const { messages, selectedUser, fetchUsers, fetchMessages } = useChatStore();
+	const { messages, selectedUser, fetchUsers, fetchMessages, setSelectedUser } = useChatStore();
 
 	useEffect(() => {
 		if (user) fetchUsers();
@@ -43,17 +43,28 @@ const ChatPage = () => {
 		<main className='h-full rounded-lg bg-gradient-to-b from-zinc-800 to-zinc-900 overflow-hidden'>
 			<Topbar />
 
-			<div className='grid lg:grid-cols-[300px_1fr] grid-cols-[80px_1fr] h-[calc(100vh-180px)]'>
-				<UsersList />
+			<div className='grid h-[calc(100vh-170px)] lg:h-[calc(100vh-180px)] lg:grid-cols-[300px_1fr] grid-cols-1'>
+				<div className={`${selectedUser ? "hidden lg:block" : "block"}`}>
+					<UsersList />
+				</div>
 
 				{/* chat message */}
-				<div className='flex flex-col h-full'>
+				<div className={`${selectedUser ? "flex" : "hidden lg:flex"} h-full flex-col`}>
 					{selectedUser ? (
 						<>
+							<div className='border-b border-zinc-800 px-4 py-2 lg:hidden'>
+								<button
+									type='button'
+									onClick={() => setSelectedUser(null)}
+									className='text-sm text-zinc-400 transition hover:text-white'
+								>
+									Back to chats
+								</button>
+							</div>
 							<ChatHeader />
 
 							{/* Messages */}
-							<ScrollArea className='h-[calc(100vh-340px)]'>
+							<ScrollArea className='h-[calc(100vh-320px)] lg:h-[calc(100vh-340px)]'>
 								<div className='p-4 space-y-4'>
 									{messages.map((message, index) => {
 										const showDateDivider =
@@ -85,7 +96,7 @@ const ChatPage = () => {
 													</Avatar>
 
 													<div
-														className={`rounded-lg p-3 max-w-[70%]
+														className={`rounded-lg p-3 max-w-[85%] sm:max-w-[70%]
 															${message.senderId === user?.id ? "bg-green-500" : "bg-zinc-800"}
 														`}
 													>

@@ -7,9 +7,9 @@ const UsersList = () => {
 	const { users, selectedUser, isLoading, setSelectedUser, onlineUsers } = useChatStore();
 
 	return (
-		<div className='border-r border-zinc-800'>
+		<div className='h-full border-r border-zinc-800'>
 			<div className='flex flex-col h-full'>
-				<ScrollArea className='h-[calc(100vh-280px)]'>
+				<ScrollArea className='h-[calc(100vh-250px)] lg:h-[calc(100vh-280px)]'>
 					<div className='space-y-2 p-4'>
 						{isLoading ? (
 							<UsersListSkeleton />
@@ -18,7 +18,7 @@ const UsersList = () => {
 								<div
 									key={user._id}
 									onClick={() => setSelectedUser(user)}
-									className={`flex items-center justify-center lg:justify-start gap-3 p-3 
+									className={`flex items-center justify-start gap-3 p-3 
 										rounded-lg cursor-pointer transition-colors
                     ${selectedUser?.clerkId === user.clerkId ? "bg-zinc-800" : "hover:bg-zinc-800/50"}`}
 								>
@@ -34,7 +34,7 @@ const UsersList = () => {
 										/>
 									</div>
 
-									<div className='flex-1 min-w-0 lg:block hidden'>
+									<div className='flex-1 min-w-0 hidden sm:block'>
 										<span className='font-medium truncate'>{user.fullName}</span>
 										<p className='text-xs text-zinc-400 truncate'>
 											{onlineUsers.has(user.clerkId) || user.isOnline

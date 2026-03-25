@@ -155,8 +155,8 @@ const PlaylistDetailPage = () => {
 						</div>
 					) : (
 						<>
-							<div className='flex items-start gap-6 mb-6'>
-								<div className='aspect-square w-48 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0'>
+							<div className='mb-6 flex flex-col items-start gap-4 sm:gap-6 lg:flex-row'>
+								<div className='aspect-square w-36 sm:w-48 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 self-center lg:self-auto'>
 									<Play className='size-16 text-white opacity-80' />
 								</div>
 								<div className='flex-1'>
@@ -168,14 +168,14 @@ const PlaylistDetailPage = () => {
 									<p className='text-sm text-zinc-400 mb-4'>
 										{currentPlaylist.songs.length} {currentPlaylist.songs.length === 1 ? "song" : "songs"}
 									</p>
-									<div className='flex items-center gap-2'>
-										<Button onClick={handlePlayPlaylist} disabled={currentPlaylist.songs.length === 0}>
+									<div className='flex flex-wrap items-center gap-2'>
+										<Button onClick={handlePlayPlaylist} disabled={currentPlaylist.songs.length === 0} className='w-full sm:w-auto'>
 											<Play className='mr-2 size-4' />
 											Play
 										</Button>
 										<Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
 											<DialogTrigger asChild>
-												<Button variant='outline'>
+												<Button variant='outline' className='w-full sm:w-auto'>
 													<Plus className='mr-2 size-4' />
 													Add Songs
 												</Button>
@@ -212,7 +212,7 @@ const PlaylistDetailPage = () => {
 												</DialogFooter>
 											</DialogContent>
 										</Dialog>
-										<Button variant='destructive' onClick={handleDeletePlaylist}>
+										<Button variant='destructive' onClick={handleDeletePlaylist} className='w-full sm:w-auto'>
 											<Trash2 className='mr-2 size-4' />
 											Delete
 										</Button>
