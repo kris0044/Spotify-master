@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { resolvePublicMusicSong, searchUnifiedSongs } from "@/lib/ytMusic";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Play, Trash2, X } from "lucide-react";
+import { Pause, Plus, Play, Trash2, X } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
@@ -32,10 +33,11 @@ const PlaylistDetailPage = () => {
 	const { currentPlaylist, fetchPlaylistById, addSongToPlaylist, removeSongFromPlaylist, deletePlaylist, isLoading } =
 		usePlaylistStore();
 	const { songs, fetchSongs } = useMusicStore();
-	const { playAlbum } = usePlayerStore();
+	const { playAlbum, currentSong, isPlaying, togglePlay } = usePlayerStore();
 	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 	const [selectedSongId, setSelectedSongId] = useState("");
 	const [songSearch, setSongSearch] = useState("");
+	const [searchResults, setSearchResults] = useState<Song[]>([]);
 
 	useEffect(() => {
 		if (id) {
@@ -47,9 +49,54 @@ const PlaylistDetailPage = () => {
 		fetchSongs();
 	}, [fetchSongs]);
 
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadSearchResults = async () => {
+			const trimmedQuery = songSearch.trim();
+			if (!trimmedQuery) {
+				setSearchResults([]);
+				return;
+			}
+
+			try {
+				const results = await searchUnifiedSongs(trimmedQuery, "", 20);
+				if (!isMounted) return;
+				setSearchResults(results);
+			} catch {
+				if (!isMounted) return;
+				setSearchResults([]);
+			}
+		};
+
+		void loadSearchResults();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [songSearch]);
+
 	const handleAddSong = async () => {
 		if (!selectedSongId || !id) return;
-		await addSongToPlaylist(id, selectedSongId);
+
+		const selectedSong = filteredSongs.find((song) => song._id === selectedSongId);
+		if (!selectedSong) return;
+
+		let songId = selectedSongId;
+		if (selectedSong.source === "youtube_music" && selectedSong.externalVideoId) {
+			const resolvedSong = await resolvePublicMusicSong({
+				videoId: selectedSong.externalVideoId,
+				title: selectedSong.title,
+				artist: selectedSong.artist,
+				album: selectedSong.albumId,
+				duration: selectedSong.duration,
+				thumbnailUrl: selectedSong.imageUrl,
+				internalSongId: selectedSong._id.startsWith("search-public-") ? null : selectedSong._id,
+			});
+			songId = resolvedSong._id;
+		}
+
+		await addSongToPlaylist(id, songId);
 		setSelectedSongId("");
 		setIsAddDialogOpen(false);
 	};
@@ -58,6 +105,21 @@ const PlaylistDetailPage = () => {
 		if (currentPlaylist && currentPlaylist.songs.length > 0) {
 			playAlbum(currentPlaylist.songs, 0);
 		}
+	};
+
+	const handlePlaySong = (index: number) => {
+		if (!currentPlaylist || currentPlaylist.songs.length === 0) return;
+
+		const playlistSongs = currentPlaylist.songs as Song[];
+		const selectedSong = playlistSongs[index];
+		const isCurrentSong = currentSong?._id === selectedSong._id;
+
+		if (isCurrentSong) {
+			togglePlay();
+			return;
+		}
+
+		playAlbum(playlistSongs, index);
 	};
 
 	const handleDeletePlaylist = async () => {
@@ -69,8 +131,11 @@ const PlaylistDetailPage = () => {
 	const availableSongs = songs.filter(
 		(song) => !currentPlaylist?.songs.some((s) => (s as Song)._id === song._id)
 	);
-	const filteredSongs = availableSongs.filter((song) =>
-		`${song.title} ${song.artist}`.toLowerCase().includes(songSearch.trim().toLowerCase())
+	const searchPool = songSearch.trim() ? searchResults : availableSongs;
+	const filteredSongs = searchPool.filter(
+		(song) =>
+			!currentPlaylist?.songs.some((playlistSong) => (playlistSong as Song)._id === song._id) &&
+			`${song.title} ${song.artist}`.toLowerCase().includes(songSearch.trim().toLowerCase())
 	);
 
 	return (
@@ -154,42 +219,68 @@ const PlaylistDetailPage = () => {
 								</div>
 							</div>
 
-							<div className='space-y-2'>
+							<div className='space-y-4'>
 								{currentPlaylist.songs.length === 0 ? (
 									<div className='text-center py-8 text-zinc-400'>
 										<p>This playlist is empty.</p>
 										<p className='text-sm mt-2'>Add some songs to get started!</p>
 									</div>
 								) : (
-									currentPlaylist.songs.map((song, index) => (
-										<div
-											key={(song as Song)._id}
-											className='flex items-center gap-4 p-3 rounded-lg hover:bg-zinc-800/50 group'
-										>
-											<span className='text-zinc-400 w-8'>{index + 1}</span>
-											<img
-												src={(song as Song).imageUrl}
-												alt={(song as Song).title}
-												className='size-12 rounded object-cover'
-											/>
-											<div className='flex-1 min-w-0'>
-												<p className='font-medium truncate'>{(song as Song).title}</p>
-												<p className='text-sm text-zinc-400 truncate'>{(song as Song).artist}</p>
-											</div>
-											<Button
-												size='sm'
-												variant='ghost'
-												onClick={() => {
-													if (id) {
-														removeSongFromPlaylist(id, (song as Song)._id);
-													}
-												}}
-												className='opacity-0 group-hover:opacity-100 transition-opacity'
-											>
-												<X className='size-4' />
-											</Button>
-										</div>
-									))
+									<div className='grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
+										{currentPlaylist.songs.map((song, index) => {
+											const playlistSong = song as Song;
+											const isCurrentSong = currentSong?._id === playlistSong._id;
+
+											return (
+												<div
+													key={playlistSong._id}
+													className='group rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(39,39,42,0.94),rgba(9,9,11,0.98))] p-4 transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-zinc-900'
+												>
+													<div className='relative mb-4 overflow-hidden rounded-[22px]'>
+														<div className='absolute left-3 top-3 z-20 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur'>
+															#{index + 1}
+														</div>
+														<Button
+															size='icon'
+															variant='ghost'
+															onClick={() => {
+																if (id) {
+																	void removeSongFromPlaylist(id, playlistSong._id);
+																}
+															}}
+															className='absolute right-3 top-3 z-20 rounded-full border border-white/10 bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity duration-300 hover:bg-black/70 group-hover:opacity-100'
+														>
+															<X className='size-4' />
+														</Button>
+														<div className='aspect-square overflow-hidden rounded-[22px] shadow-xl ring-1 ring-white/10'>
+															<img
+																src={playlistSong.imageUrl}
+																alt={playlistSong.title}
+																className='h-full w-full object-cover transition duration-500 group-hover:scale-105'
+															/>
+														</div>
+														<Button
+															size='icon'
+															onClick={() => handlePlaySong(index)}
+															className={`absolute bottom-3 right-3 rounded-full bg-green-500 text-black shadow-[0_12px_30px_rgba(34,197,94,0.35)] transition-all hover:scale-105 hover:bg-green-400 ${
+																isCurrentSong ? "opacity-100" : "translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
+															}`}
+														>
+															{isCurrentSong && isPlaying ? <Pause className='size-5 text-black' /> : <Play className='size-5 text-black' />}
+														</Button>
+													</div>
+
+													<div className='space-y-2'>
+														<h3 className='truncate text-lg font-semibold text-white'>{playlistSong.title}</h3>
+														<p className='truncate text-sm text-zinc-400'>{playlistSong.artist}</p>
+														<p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
+															{playlistSong.duration ? `${Math.floor(playlistSong.duration / 60)}:${(playlistSong.duration % 60).toString().padStart(2, "0")}` : "Unknown duration"}
+														</p>
+													</div>
+												</div>
+											);
+										})}
+									</div>
 								)}
 							</div>
 						</>

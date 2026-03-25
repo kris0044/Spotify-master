@@ -22,44 +22,38 @@ export const PlaybackControls = () => {
 		clearUpNextQueue,
 		isQueueOpen,
 		toggleQueuePanel,
+		playbackPosition,
+		playbackDuration,
+		requestSeek,
 	} = usePlayerStore();
 	const isYouTubePlayback = getPlaybackType(currentSong) === "youtube";
 
 	const [volume, setVolume] = useState(75);
-	const [currentTime, setCurrentTime] = useState(0);
-	const [duration, setDuration] = useState(0);
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 
 	useEffect(() => {
 		if (isYouTubePlayback) {
-			setCurrentTime(0);
-			setDuration(0);
 			audioRef.current = null;
 			return;
 		}
 
 		audioRef.current = document.querySelector("audio");
-
-		const audio = audioRef.current;
-		if (!audio) return;
-
-		const updateTime = () => setCurrentTime(audio.currentTime);
-		const updateDuration = () => setDuration(audio.duration);
-
-		audio.addEventListener("timeupdate", updateTime);
-		audio.addEventListener("loadedmetadata", updateDuration);
-
-		return () => {
-			audio.removeEventListener("timeupdate", updateTime);
-			audio.removeEventListener("loadedmetadata", updateDuration);
-		};
 	}, [currentSong, isYouTubePlayback]);
 
 	const handleSeek = (value: number[]) => {
+		if (isYouTubePlayback) {
+			requestSeek(value[0]);
+			return;
+		}
+
 		if (audioRef.current) {
 			audioRef.current.currentTime = value[0];
 		}
 	};
+
+	const duration = playbackDuration || currentSong?.duration || 0;
+	const currentTime = Math.min(playbackPosition, duration || playbackPosition);
+	const remainingTime = Math.max(duration - currentTime, 0);
 
 	return (
 		<footer className='relative h-20 sm:h-24 border-t border-zinc-800 bg-zinc-900 px-4'>
@@ -140,21 +134,15 @@ export const PlaybackControls = () => {
 					</div>
 
 					<div className='hidden w-full items-center gap-2 sm:flex'>
-						{isYouTubePlayback ? (
-							<div className='w-full text-center text-xs uppercase tracking-[0.2em] text-zinc-500'>YouTube playback</div>
-						) : (
-							<>
-								<div className='text-xs text-zinc-400'>{formatTime(currentTime)}</div>
-								<Slider
-									value={[currentTime]}
-									max={duration || 100}
-									step={1}
-									className='w-full active:cursor-grabbing hover:cursor-grab'
-									onValueChange={handleSeek}
-								/>
-								<div className='text-xs text-zinc-400'>{formatTime(duration)}</div>
-							</>
-						)}
+						<div className='text-xs text-zinc-400'>{formatTime(currentTime)}</div>
+						<Slider
+							value={[currentTime]}
+							max={duration || 100}
+							step={1}
+							className='w-full active:cursor-grabbing hover:cursor-grab'
+							onValueChange={handleSeek}
+						/>
+						<div className='text-xs text-zinc-400'>-{formatTime(remainingTime)}</div>
 					</div>
 				</div>
 

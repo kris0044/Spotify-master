@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Bell, BellOff, Heart, ListPlus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ensureResolvableSong, isTemporaryPublicSongId } from "@/lib/ytMusic";
 import { useFavoriteStore } from "@/stores/useFavoriteStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { useFollowStore } from "@/stores/useFollowStore";
@@ -42,9 +43,18 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
 	const [playlistSearch, setPlaylistSearch] = useState("");
+	const [resolvedSongId, setResolvedSongId] = useState(song._id);
+
+	useEffect(() => {
+		setResolvedSongId(song._id);
+	}, [song._id]);
 
 	useEffect(() => {
 		if (showFavorite) {
+			if (isTemporaryPublicSongId(song._id)) {
+				setIsFavoriteState(false);
+				return;
+			}
 			checkIsFavorite(song._id).then(setIsFavoriteState);
 		}
 	}, [song._id, showFavorite, checkIsFavorite]);
@@ -57,9 +67,13 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 
 	useEffect(() => {
 		if (showFollow) {
-			setIsFollowingState(isFollowingSong(song._id));
+			if (isTemporaryPublicSongId(resolvedSongId)) {
+				setIsFollowingState(false);
+				return;
+			}
+			setIsFollowingState(isFollowingSong(resolvedSongId));
 		}
-	}, [showFollow, song._id, isFollowingSong, isHydrated]);
+	}, [showFollow, resolvedSongId, isFollowingSong, isHydrated]);
 
 	useEffect(() => {
 		if (showPlaylist && isDialogOpen) {
@@ -71,32 +85,42 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 		playlist.name.toLowerCase().includes(playlistSearch.trim().toLowerCase())
 	);
 
+	const getActionableSongId = async () => {
+		const resolvedSong = await ensureResolvableSong(song);
+		setResolvedSongId(resolvedSong._id);
+		return resolvedSong._id;
+	};
+
 	const handleFavoriteToggle = async () => {
+		const actionableSongId = await getActionableSongId();
+
 		if (isFavoriteState) {
-			await removeFromFavorites(song._id);
+			await removeFromFavorites(actionableSongId);
 			setIsFavoriteState(false);
 		} else {
-			await addToFavorites(song._id);
+			await addToFavorites(actionableSongId);
 			setIsFavoriteState(true);
 		}
 	};
 
 	const handleAddToPlaylist = async () => {
 		if (!selectedPlaylistId) return;
-		await addSongToPlaylist(selectedPlaylistId, song._id);
+		const actionableSongId = await getActionableSongId();
+		await addSongToPlaylist(selectedPlaylistId, actionableSongId);
 		setIsDialogOpen(false);
 		setSelectedPlaylistId("");
 	};
 
 	const handleFollowToggle = async () => {
 		try {
+			const actionableSongId = await getActionableSongId();
 			if (isFollowingState) {
-				await unfollowSong(song._id);
+				await unfollowSong(actionableSongId);
 				setIsFollowingState(false);
 				toast.success("Unfollowed song");
 				return;
 			}
-			await followSong(song._id);
+			await followSong(actionableSongId);
 			setIsFollowingState(true);
 			toast.success("Following song");
 		} catch (error: any) {
@@ -118,7 +142,7 @@ const SongActions = ({ song, showFavorite = true, showPlaylist = true, showFollo
 				</Button>
 			)}
 			{showPlaylist && (
-				<Button size='sm' variant='ghost' onClick={() => addToUpNextQueue(song)}>
+				<Button size='sm' variant='ghost' onClick={() => void addToUpNextQueue(song)}>
 					<ListPlus className='size-4' />
 				</Button>
 			)}

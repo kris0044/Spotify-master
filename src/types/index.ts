@@ -210,3 +210,27 @@ export interface PublicMusicChartResponse {
 	};
 	songs: PublicMusicSong[];
 }
+
+export interface PublicMusicArtistSpotlight {
+	name: string;
+	imageUrl: string;
+	songs: Song[];
+	songCount: number;
+	albumCount: number;
+}
+
+export interface PublicMusicAlbumSpotlight {
+	title: string;
+	artist: string;
+	imageUrl: string;
+	songs: Song[];
+}
+
+export interface PublicMusicHomeSections {
+	featuredSongs: Song[];
+	recommendedSongs: Song[];
+	madeForYouSongs: Song[];
+	trendingSongs: Song[];
+	artists: PublicMusicArtistSpotlight[];
+	albums: PublicMusicAlbumSpotlight[];
+}

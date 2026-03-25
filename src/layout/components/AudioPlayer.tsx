@@ -7,12 +7,13 @@ const AudioPlayer = () => {
 	const prevSongRef = useRef<string | null>(null);
 	const hasTrackedPlay = useRef<boolean>(false);
 
-	const { currentSong, isPlaying, playNext } = usePlayerStore();
+	const { currentSong, isPlaying, playNext, setPlaybackProgress, resetPlaybackProgress } = usePlayerStore();
 
 	// handle play/pause logic
 	useEffect(() => {
 		if (getPlaybackType(currentSong) !== "local") {
 			audioRef.current?.pause();
+			resetPlaybackProgress(currentSong?.duration || 0);
 			return;
 		}
 
@@ -25,6 +26,7 @@ const AudioPlayer = () => {
 		const audio = audioRef.current;
 
 		const handleEnded = () => {
+			resetPlaybackProgress();
 			void playNext();
 		};
 
@@ -52,6 +54,7 @@ const AudioPlayer = () => {
 			// reset the playback position
 			audio.currentTime = 0;
 			hasTrackedPlay.current = false;
+			resetPlaybackProgress(currentSong.duration || 0);
 
 			prevSongRef.current = currentSong?.audioUrl;
 
@@ -82,6 +85,31 @@ const AudioPlayer = () => {
 			audio.removeEventListener("play", handlePlay);
 		};
 	}, [currentSong, isPlaying]);
+
+	useEffect(() => {
+		if (getPlaybackType(currentSong) !== "local") {
+			return;
+		}
+
+		const audio = audioRef.current;
+		if (!audio) return;
+
+		const updateProgress = () => {
+			setPlaybackProgress(audio.currentTime, Number.isFinite(audio.duration) ? audio.duration : currentSong?.duration || 0);
+		};
+
+		audio.addEventListener("timeupdate", updateProgress);
+		audio.addEventListener("loadedmetadata", updateProgress);
+		audio.addEventListener("durationchange", updateProgress);
+
+		updateProgress();
+
+		return () => {
+			audio.removeEventListener("timeupdate", updateProgress);
+			audio.removeEventListener("loadedmetadata", updateProgress);
+			audio.removeEventListener("durationchange", updateProgress);
+		};
+	}, [currentSong, setPlaybackProgress]);
 
 	return <audio ref={audioRef} />;
 };

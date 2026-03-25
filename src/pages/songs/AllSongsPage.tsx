@@ -2,7 +2,9 @@ import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { searchUnifiedSongs } from "@/lib/ytMusic";
 import { useMusicStore } from "@/stores/useMusicStore";
+import { Song } from "@/types";
 import { AudioLines, Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import SectionGrid from "../home/components/SectionGrid";
@@ -12,11 +14,50 @@ const AllSongsPage = () => {
 	const [offset, setOffset] = useState(0);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [genreQuery, setGenreQuery] = useState("");
+	const [mixedResults, setMixedResults] = useState<Song[]>([]);
+	const [isSearching, setIsSearching] = useState(false);
 	const limit = 10;
 
 	useEffect(() => {
+		if (searchQuery.trim()) {
+			return;
+		}
 		void fetchAllSongs(limit, offset, searchQuery, genreQuery);
 	}, [fetchAllSongs, offset, searchQuery, genreQuery]);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadMixedResults = async () => {
+			const trimmedQuery = searchQuery.trim();
+			if (!trimmedQuery) {
+				setMixedResults([]);
+				setIsSearching(false);
+				return;
+			}
+
+			setIsSearching(true);
+
+			try {
+				const results = await searchUnifiedSongs(trimmedQuery, genreQuery, 24);
+				if (!isMounted) return;
+				setMixedResults(results);
+			} catch {
+				if (!isMounted) return;
+				setMixedResults([]);
+			} finally {
+				if (isMounted) {
+					setIsSearching(false);
+				}
+			}
+		};
+
+		void loadMixedResults();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [genreQuery, searchQuery]);
 
 	const handleLoadMore = () => {
 		if (!isLoading && hasMoreSongs) {
@@ -71,10 +112,14 @@ const AllSongsPage = () => {
 					</section>
 
 					<div className='mt-8'>
-						<SectionGrid title='All Songs' songs={allSongs} isLoading={isLoading && offset === 0} />
+						<SectionGrid
+							title={searchQuery.trim() ? 'Search Results' : 'All Songs'}
+							songs={searchQuery.trim() ? mixedResults : allSongs}
+							isLoading={searchQuery.trim() ? isSearching : isLoading && offset === 0}
+						/>
 					</div>
 
-					{hasMoreSongs && (
+					{!searchQuery.trim() && hasMoreSongs && (
 						<div className='mt-6 flex justify-center'>
 							<Button
 								onClick={handleLoadMore}

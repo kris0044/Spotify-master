@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Song } from "@/types";
 import { useChatStore } from "./useChatStore";
 import { axiosInstance } from "@/lib/axios";
+import { ensureResolvableSong } from "@/lib/ytMusic";
 import toast from "react-hot-toast";
 
 export const getPlaybackType = (song: Song | null) => {
@@ -19,10 +20,17 @@ interface PlayerStore {
 	upNextQueue: Song[];
 	currentIndex: number;
 	isQueueOpen: boolean;
+	playbackPosition: number;
+	playbackDuration: number;
+	pendingSeekTime: number | null;
 
 	initializeQueue: (songs: Song[]) => void;
 	playAlbum: (songs: Song[], startIndex?: number) => void;
 	setCurrentSong: (song: Song | null) => void;
+	setPlaybackProgress: (position: number, duration?: number) => void;
+	resetPlaybackProgress: (duration?: number) => void;
+	requestSeek: (position: number) => void;
+	clearPendingSeek: () => void;
 	togglePlay: () => void;
 	playNext: () => Promise<void>;
 	playPrevious: () => void;
@@ -51,6 +59,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 	upNextQueue: [],
 	currentIndex: -1,
 	isQueueOpen: false,
+	playbackPosition: 0,
+	playbackDuration: 0,
+	pendingSeekTime: null,
 
 	initializeQueue: (songs) => {
 		set({
@@ -71,6 +82,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 			currentSong: song,
 			currentIndex: startIndex,
 			isPlaying: true,
+			playbackPosition: 0,
+			playbackDuration: song.duration || 0,
 		});
 	},
 
@@ -84,7 +97,28 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 			currentSong: song,
 			isPlaying: true,
 			currentIndex: songIndex !== -1 ? songIndex : get().currentIndex,
+			playbackPosition: 0,
+			playbackDuration: song.duration || 0,
 		});
+	},
+
+	setPlaybackProgress: (position, duration) => {
+		set((state) => ({
+			playbackPosition: Number.isFinite(position) ? position : state.playbackPosition,
+			playbackDuration: Number.isFinite(duration) ? (duration as number) : state.playbackDuration,
+		}));
+	},
+
+	resetPlaybackProgress: (duration = 0) => {
+		set({ playbackPosition: 0, playbackDuration: duration });
+	},
+
+	requestSeek: (position) => {
+		set({ pendingSeekTime: position, playbackPosition: position });
+	},
+
+	clearPendingSeek: () => {
+		set({ pendingSeekTime: null });
 	},
 
 	togglePlay: () => {
@@ -106,6 +140,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 						upNextQueue: remainingQueue,
 						currentSong: nextSong,
 						isPlaying: true,
+						playbackPosition: 0,
+						playbackDuration: nextSong.duration || 0,
 					});
 					return;
 				}
@@ -124,12 +160,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 				currentSong: nextSong,
 				currentIndex: nextIndex,
 				isPlaying: true,
+				playbackPosition: 0,
+				playbackDuration: nextSong.duration || 0,
 			});
 			return;
 		}
 
 		updateActivity(null, false);
-		set({ isPlaying: false });
+		set({ isPlaying: false, playbackPosition: 0, playbackDuration: 0 });
 	},
 
 	playPrevious: () => {
@@ -143,12 +181,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 				currentSong: prevSong,
 				currentIndex: prevIndex,
 				isPlaying: true,
+				playbackPosition: 0,
+				playbackDuration: prevSong.duration || 0,
 			});
 			return;
 		}
 
 		updateActivity(null, false);
-		set({ isPlaying: false });
+		set({ isPlaying: false, playbackPosition: 0, playbackDuration: 0 });
 	},
 
 	fetchUpNextQueue: async () => {
@@ -164,9 +204,10 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
 	addToUpNextQueue: async (song) => {
 		try {
-			const response = await axiosInstance.post("/users/me/queue", { songId: song._id });
+			const actionableSong = await ensureResolvableSong(song);
+			const response = await axiosInstance.post("/users/me/queue", { songId: actionableSong._id });
 			set({ upNextQueue: response.data.songs || [] });
-			toast.success(`${song.title} added to Up Next`);
+			toast.success(`${actionableSong.title} added to Up Next`);
 		} catch (error: any) {
 			toast.error(error.response?.data?.message || "Failed to queue song");
 		}

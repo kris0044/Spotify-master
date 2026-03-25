@@ -3,15 +3,27 @@ import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { fetchPublicMusicHomeSections, mergeUniqueSongs, searchUnifiedSongs } from "@/lib/ytMusic";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
-import { Sparkles, Search, ArrowUpRight, Disc3 } from "lucide-react";
+import { PublicMusicHomeSections, Song } from "@/types";
+import { Sparkles, Search, ArrowUpRight, Disc3, Radio } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import FeaturedSection from "./components/FeaturedSection";
+import PublicMusicSpotlight from "./components/PublicMusicSpotlight";
 import SectionGrid from "./components/SectionGrid";
 import { useAuth } from "@clerk/clerk-react";
+
+const emptyPublicSections: PublicMusicHomeSections = {
+	featuredSongs: [],
+	recommendedSongs: [],
+	madeForYouSongs: [],
+	trendingSongs: [],
+	artists: [],
+	albums: [],
+};
 
 const HomePage = () => {
 	const {
@@ -27,6 +39,8 @@ const HomePage = () => {
 	const { isSignedIn } = useAuth();
 	const { initializeQueue } = usePlayerStore();
 	const [searchQuery, setSearchQuery] = useState("");
+	const [publicSections, setPublicSections] = useState<PublicMusicHomeSections>(emptyPublicSections);
+	const [searchResults, setSearchResults] = useState<Song[]>([]);
 
 	useEffect(() => {
 		void fetchFeaturedSongs();
@@ -38,44 +52,134 @@ const HomePage = () => {
 	}, [fetchFeaturedSongs, fetchMadeForYouSongs, fetchTrendingSongs, fetchRecommendations, isSignedIn]);
 
 	useEffect(() => {
-		if (madeForYouSongs.length > 0 && featuredSongs.length > 0 && trendingSongs.length > 0) {
-			initializeQueue([...featuredSongs, ...madeForYouSongs, ...trendingSongs]);
+		let isMounted = true;
+
+		const loadPublicSections = async () => {
+			try {
+				const response = await fetchPublicMusicHomeSections();
+				if (!isMounted) return;
+				setPublicSections(response);
+			} catch {
+				if (!isMounted) return;
+				setPublicSections(emptyPublicSections);
+			}
+		};
+
+		void loadPublicSections();
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadSearchResults = async () => {
+			const trimmedQuery = searchQuery.trim();
+			if (!trimmedQuery) {
+				setSearchResults([]);
+				return;
+			}
+
+			try {
+				const results = await searchUnifiedSongs(trimmedQuery, "", 12);
+				if (!isMounted) return;
+				setSearchResults(results);
+			} catch {
+				if (!isMounted) return;
+				setSearchResults([]);
+			}
+		};
+
+		void loadSearchResults();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [searchQuery]);
+
+	const featuredFeed = useMemo(
+		() => mergeUniqueSongs([...featuredSongs, ...publicSections.featuredSongs]),
+		[featuredSongs, publicSections.featuredSongs]
+	);
+	const madeForYouFeed = useMemo(
+		() => mergeUniqueSongs([...madeForYouSongs, ...publicSections.madeForYouSongs]),
+		[madeForYouSongs, publicSections.madeForYouSongs]
+	);
+	const trendingFeed = useMemo(
+		() => mergeUniqueSongs([...trendingSongs, ...publicSections.trendingSongs]),
+		[trendingSongs, publicSections.trendingSongs]
+	);
+	const recommendationFeed = useMemo(
+		() => mergeUniqueSongs([...recommendations, ...publicSections.recommendedSongs]),
+		[recommendations, publicSections.recommendedSongs]
+	);
+	const homeQueue = useMemo(
+		() => mergeUniqueSongs([...featuredFeed, ...madeForYouFeed, ...trendingFeed, ...recommendationFeed]),
+		[featuredFeed, madeForYouFeed, trendingFeed, recommendationFeed]
+	);
+
+	useEffect(() => {
+		if (homeQueue.length > 0) {
+			initializeQueue(homeQueue);
 		}
-	}, [initializeQueue, madeForYouSongs, trendingSongs, featuredSongs]);
+	}, [homeQueue, initializeQueue]);
 
 	const normalizedSearch = searchQuery.trim().toLowerCase();
 	const matchesSearch = (value?: string | null) => (value || "").toLowerCase().includes(normalizedSearch);
 
 	const filteredFeatured = useMemo(
 		() =>
-			featuredSongs.filter(
+			featuredFeed.filter(
 				(song) => matchesSearch(song.title) || matchesSearch(song.artist) || matchesSearch(song.albumId)
 			),
-		[featuredSongs, normalizedSearch]
+		[featuredFeed, normalizedSearch]
 	);
 
 	const filteredMadeForYou = useMemo(
 		() =>
-			madeForYouSongs.filter(
+			madeForYouFeed.filter(
 				(song) => matchesSearch(song.title) || matchesSearch(song.artist) || matchesSearch(song.albumId)
 			),
-		[madeForYouSongs, normalizedSearch]
+		[madeForYouFeed, normalizedSearch]
 	);
 
 	const filteredTrending = useMemo(
 		() =>
-			trendingSongs.filter(
+			trendingFeed.filter(
 				(song) => matchesSearch(song.title) || matchesSearch(song.artist) || matchesSearch(song.albumId)
 			),
-		[trendingSongs, normalizedSearch]
+		[trendingFeed, normalizedSearch]
 	);
 
 	const filteredRecommendations = useMemo(
 		() =>
-			recommendations.filter(
+			recommendationFeed.filter(
 				(song) => matchesSearch(song.title) || matchesSearch(song.artist) || matchesSearch(song.albumId)
 			),
-		[recommendations, normalizedSearch]
+		[recommendationFeed, normalizedSearch]
+	);
+
+	const filteredPublicArtists = useMemo(
+		() =>
+			publicSections.artists.filter(
+				(artist) =>
+					matchesSearch(artist.name) ||
+					artist.songs.some((song) => matchesSearch(song.title) || matchesSearch(song.albumId))
+			),
+		[publicSections.artists, normalizedSearch]
+	);
+
+	const filteredPublicAlbums = useMemo(
+		() =>
+			publicSections.albums.filter(
+				(album) =>
+					matchesSearch(album.title) ||
+					matchesSearch(album.artist) ||
+					album.songs.some((song) => matchesSearch(song.title))
+			),
+		[publicSections.albums, normalizedSearch]
 	);
 
 	return (
@@ -94,11 +198,9 @@ const HomePage = () => {
 									Find your next favorite track faster.
 								</h1>
 								<p className='mt-4 max-w-xl text-sm leading-6 text-zinc-300'>
-									Explore featured drops, trending songs, and tailored picks in a cleaner, richer listening space.
+									Explore featured drops, trending songs, tailored picks, and public music discoveries in a cleaner, richer listening space.
 								</p>
 							</div>
-
-							
 						</div>
 
 						<div className='mt-6'>
@@ -113,6 +215,24 @@ const HomePage = () => {
 							</div>
 						</div>
 					</section>
+
+					<section className='mt-6 flex flex-wrap items-center gap-2 text-xs text-zinc-300'>
+						<div className='inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1'>
+							<Radio className='h-3.5 w-3.5 text-red-300' />
+							Public API songs now flow into Featured, Recommended, Made For You, and Trending
+						</div>
+						<Button asChild variant='outline' className='h-8 border-white/10 bg-white/5 px-3 text-xs text-zinc-200 hover:bg-white/10 hover:text-white'>
+							<Link to='/publicmusic/top100'>Browse Public Top 100</Link>
+						</Button>
+					</section>
+
+					<PublicMusicSpotlight artists={filteredPublicArtists} albums={filteredPublicAlbums} />
+
+					{searchQuery.trim() && (
+						<div className='mt-8'>
+							<SectionGrid title='Search Results' songs={searchResults} isLoading={false} />
+						</div>
+					)}
 
 					<div className='mt-8'>
 						<div className='mb-5 flex items-center justify-between gap-4'>
@@ -134,7 +254,7 @@ const HomePage = () => {
 					</div>
 
 					<div className='mt-8 space-y-2'>
-						{isSignedIn && filteredRecommendations.length > 0 && (
+						{(isSignedIn || publicSections.recommendedSongs.length > 0) && filteredRecommendations.length > 0 && (
 							<SectionGrid title='Recommended For You' songs={filteredRecommendations} isLoading={false} />
 						)}
 						<SectionGrid title='Made For You' songs={filteredMadeForYou} isLoading={isLoading} />
