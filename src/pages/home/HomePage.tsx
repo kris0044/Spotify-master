@@ -25,6 +25,38 @@ const emptyPublicSections: PublicMusicHomeSections = {
 	albums: [],
 };
 
+const normalizeSearchValue = (value?: string | null) => (value || "").trim().toLowerCase();
+
+const splitSearchTokens = (value: string) =>
+	normalizeSearchValue(value)
+		.split(/\s+/)
+		.filter(Boolean);
+
+const songMatchesMetadata = (song: Song, query: string, extraKeywords: string[] = []) => {
+	const normalizedQuery = normalizeSearchValue(query);
+	if (!normalizedQuery) return false;
+
+	const searchableValues = [
+		song.title,
+		song.artist,
+		song.albumId,
+		song.genre,
+		song.source,
+		...extraKeywords,
+	]
+		.map((value) => normalizeSearchValue(value))
+		.filter(Boolean);
+
+	if (searchableValues.some((value) => value.includes(normalizedQuery))) {
+		return true;
+	}
+
+	const tokens = splitSearchTokens(normalizedQuery);
+	if (tokens.length === 0) return false;
+
+	return tokens.every((token) => searchableValues.some((value) => value.includes(token)));
+};
+
 const HomePage = () => {
 	const {
 		fetchFeaturedSongs,
@@ -182,6 +214,50 @@ const HomePage = () => {
 		[publicSections.albums, normalizedSearch]
 	);
 
+	const contextualSearchResults = useMemo(() => {
+		if (!normalizedSearch) {
+			return [];
+		}
+
+		const songPool = [
+			...featuredFeed.map((song) => ({ song, keywords: ["featured", "editor spotlight", "popular"] })),
+			...madeForYouFeed.map((song) => ({ song, keywords: ["made for you", "mix", "personalized"] })),
+			...trendingFeed.map((song) => ({ song, keywords: ["trending", "viral", "popular", "hot"] })),
+			...recommendationFeed.map((song) => ({ song, keywords: ["recommended", "for you", "picked"] })),
+			...publicSections.artists.flatMap((artist) =>
+				artist.songs.map((song) => ({
+					song,
+					keywords: [artist.name, "artist", "top artist"],
+				}))
+			),
+			...publicSections.albums.flatMap((album) =>
+				album.songs.map((song) => ({
+					song,
+					keywords: [album.title, album.artist, "album", "record"],
+				}))
+			),
+		];
+
+		return mergeUniqueSongs(
+			songPool
+				.filter(({ song, keywords }) => songMatchesMetadata(song, normalizedSearch, keywords))
+				.map(({ song }) => song)
+		);
+	}, [
+		featuredFeed,
+		madeForYouFeed,
+		trendingFeed,
+		recommendationFeed,
+		publicSections.artists,
+		publicSections.albums,
+		normalizedSearch,
+	]);
+
+	const combinedSearchResults = useMemo(
+		() => mergeUniqueSongs([...contextualSearchResults, ...searchResults]),
+		[contextualSearchResults, searchResults]
+	);
+
 	return (
 		<main className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-950 via-black to-black'>
 			<Topbar />
@@ -207,7 +283,7 @@ const HomePage = () => {
 							<div className='relative max-w-2xl'>
 								<Search className='pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500' />
 								<Input
-									placeholder='Search songs, artists, or album ids'
+									placeholder='Search songs, artists, albums, genres, or trending keywords'
 									className='h-12 border-white/10 bg-white/5 pl-11 text-white placeholder:text-zinc-500'
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
@@ -230,7 +306,7 @@ const HomePage = () => {
 
 					{searchQuery.trim() && (
 						<div className='mt-8'>
-							<SectionGrid title='Search Results' songs={searchResults} isLoading={false} />
+							<SectionGrid title='Search Results' songs={combinedSearchResults} isLoading={false} />
 						</div>
 					)}
 

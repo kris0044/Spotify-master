@@ -22,7 +22,7 @@ const Topbar = () => {
 							<img src='/spotify.png' className='size-5' alt='Spotify logo' />
 						</div>
 						<div className='hidden min-w-0 sm:block'>
-							<div className='text-sm font-semibold tracking-[0.18em] text-white'>SPOTIFY</div>
+							<div className='text-sm font-semibold tracking-[0.18em] text-white'>More Music</div>
 							<div className='text-[11px] uppercase tracking-[0.22em] text-zinc-500'>Listen better</div>
 						</div>
 					</Link>

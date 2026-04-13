@@ -25,7 +25,7 @@ const AuthShell = ({
 				<header className='flex items-center justify-between mb-10'>
 					<Link to='/' className='flex items-center gap-2 text-white/90 hover:text-white'>
 						<img src='/spotify.png' className='size-8' alt='Spotify logo' />
-						<span className='font-semibold'>Spotify Clone</span>
+						<span className='font-semibold'>More Music</span>
 					</Link>
 					<div className='hidden md:flex items-center gap-5 text-sm text-zinc-300'>
 						<div className='flex items-center gap-2'>
