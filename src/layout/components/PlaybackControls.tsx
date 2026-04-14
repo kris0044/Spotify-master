@@ -56,9 +56,9 @@ export const PlaybackControls = () => {
 	const remainingTime = Math.max(duration - currentTime, 0);
 
 	return (
-		<footer className='relative h-20 sm:h-24 border-t border-zinc-800 bg-zinc-900 px-4'>
+		<footer className='relative border-t border-zinc-800 bg-zinc-900 px-3 sm:h-24 sm:px-4'>
 			{isQueueOpen && (
-				<div className='absolute bottom-full right-4 mb-3 w-[360px] rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl'>
+				<div className='absolute bottom-full left-3 right-3 mb-3 rounded-2xl border border-white/10 bg-zinc-950/95 p-4 shadow-2xl backdrop-blur-xl sm:left-auto sm:right-4 sm:w-[360px]'>
 					<div className='mb-4 flex items-center justify-between gap-3'>
 						<div>
 							<h3 className='font-semibold text-white'>Up Next Queue</h3>
@@ -97,7 +97,24 @@ export const PlaybackControls = () => {
 				</div>
 			)}
 
-			<div className='mx-auto flex h-full max-w-[1800px] items-center justify-between'>
+			<div className='mx-auto flex min-h-[76px] max-w-[1800px] items-center justify-between gap-3 py-2 sm:h-full sm:min-h-0 sm:gap-0 sm:py-0'>
+				<div className='flex min-w-0 flex-1 items-center gap-3 sm:hidden'>
+					{currentSong ? (
+						<>
+							<img src={currentSong.imageUrl} alt={currentSong.title} className='h-12 w-12 rounded-xl object-cover' />
+							<div className='min-w-0 flex-1'>
+								<div className='truncate text-sm font-medium text-white'>{currentSong.title}</div>
+								<div className='truncate text-xs text-zinc-400'>{currentSong.artist}</div>
+							</div>
+						</>
+					) : (
+						<div className='min-w-0 flex-1'>
+							<div className='text-sm font-medium text-white'>Nothing playing</div>
+							<div className='text-xs text-zinc-500'>Pick a song to start listening</div>
+						</div>
+					)}
+				</div>
+
 				<div className='hidden min-w-[180px] w-[30%] items-center gap-4 sm:flex'>
 					{currentSong && (
 						<>
@@ -110,22 +127,26 @@ export const PlaybackControls = () => {
 					)}
 				</div>
 
-				<div className='flex max-w-full flex-1 flex-col items-center gap-2 sm:max-w-[45%]'>
-					<div className='flex items-center gap-4 sm:gap-6'>
+				<div className='flex max-w-full items-center justify-end gap-2 sm:max-w-[45%] sm:flex-1 sm:flex-col sm:items-center sm:gap-2'>
+					<div className='flex items-center gap-2 sm:gap-6'>
 						<Button size='icon' variant='ghost' className='hidden text-zinc-400 hover:text-white sm:inline-flex'>
 							<Shuffle className='h-4 w-4' />
 						</Button>
 
-						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white' onClick={playPrevious} disabled={!currentSong}>
+						<Button size='icon' variant='ghost' className='hidden text-zinc-400 hover:text-white sm:inline-flex' onClick={playPrevious} disabled={!currentSong}>
 							<SkipBack className='h-4 w-4' />
 						</Button>
 
-						<Button size='icon' className='h-8 w-8 rounded-full bg-white text-black hover:bg-white/80' onClick={togglePlay} disabled={!currentSong}>
+						<Button size='icon' className='h-10 w-10 rounded-full bg-white text-black hover:bg-white/80 sm:h-8 sm:w-8' onClick={togglePlay} disabled={!currentSong}>
 							{isPlaying ? <Pause className='h-5 w-5' /> : <Play className='h-5 w-5' />}
 						</Button>
 
-						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white' onClick={() => void playNext()} disabled={!currentSong}>
+						<Button size='icon' variant='ghost' className='hidden text-zinc-400 hover:text-white sm:inline-flex' onClick={() => void playNext()} disabled={!currentSong}>
 							<SkipForward className='h-4 w-4' />
+						</Button>
+
+						<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white sm:hidden' onClick={toggleQueuePanel}>
+							<ListMusic className='h-4 w-4' />
 						</Button>
 
 						<Button size='icon' variant='ghost' className='hidden text-zinc-400 hover:text-white sm:inline-flex'>

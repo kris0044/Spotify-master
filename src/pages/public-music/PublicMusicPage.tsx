@@ -396,8 +396,12 @@ const PublicMusicPage = () => {
 													: "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
 											}`}
 										>
-											<div className='flex items-center gap-4'>
-												<button type='button' onClick={() => void handlePlaySong(song)} className='flex min-w-0 flex-1 items-center gap-4 text-left'>
+											<div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
+												<button
+													type='button'
+													onClick={() => void handlePlaySong(song)}
+													className='flex min-w-0 flex-1 items-center gap-3 text-left sm:gap-4'
+												>
 													<div className='relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-white/10'>
 														{song.thumbnailUrl ? (
 															<img src={song.thumbnailUrl} alt={song.title} className='h-full w-full object-cover' />
@@ -420,31 +424,46 @@ const PublicMusicPage = () => {
 													</div>
 												</button>
 
-												<div className='flex flex-col gap-2'>
+												<div className='grid w-full grid-cols-4 gap-2 sm:flex sm:w-auto sm:flex-col'>
 													<Button
 														size='icon'
 														variant='ghost'
-														className={isFavorite ? "text-red-400 hover:text-red-300" : "text-zinc-400 hover:text-white"}
+														className={`h-10 w-full rounded-xl border border-white/10 bg-black/20 ${
+															isFavorite ? "text-red-400 hover:text-red-300" : "text-zinc-400 hover:text-white"
+														} sm:h-9 sm:w-9 sm:rounded-md sm:border-0 sm:bg-transparent`}
 														onClick={() => void handleFavoriteToggle(song)}
+														aria-label='Add to favorites'
 													>
 														<Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
 													</Button>
 													<Button
 														size='icon'
 														variant='ghost'
-														className={isQueued ? "text-emerald-400 hover:text-emerald-300" : "text-zinc-400 hover:text-white"}
+														className={`h-10 w-full rounded-xl border border-white/10 bg-black/20 ${
+															isQueued ? "text-emerald-400 hover:text-emerald-300" : "text-zinc-400 hover:text-white"
+														} sm:h-9 sm:w-9 sm:rounded-md sm:border-0 sm:bg-transparent`}
 														onClick={() => void handleAddToQueue(song)}
+														aria-label='Add to queue'
 													>
 														<ListPlus className='h-4 w-4' />
 													</Button>
-													<Button size='icon' variant='ghost' className='text-zinc-400 hover:text-white' onClick={() => void openPlaylistDialog(song)}>
+													<Button
+														size='icon'
+														variant='ghost'
+														className='h-10 w-full rounded-xl border border-white/10 bg-black/20 text-zinc-400 hover:text-white sm:h-9 sm:w-9 sm:rounded-md sm:border-0 sm:bg-transparent'
+														onClick={() => void openPlaylistDialog(song)}
+														aria-label='Add to playlist'
+													>
 														<Plus className='h-4 w-4' />
 													</Button>
 													<Button
 														size='icon'
 														variant='ghost'
-														className={isNotificationEnabled ? "text-amber-300 hover:text-amber-200" : "text-zinc-400 hover:text-white"}
+														className={`h-10 w-full rounded-xl border border-white/10 bg-black/20 ${
+															isNotificationEnabled ? "text-amber-300 hover:text-amber-200" : "text-zinc-400 hover:text-white"
+														} sm:h-9 sm:w-9 sm:rounded-md sm:border-0 sm:bg-transparent`}
 														onClick={() => void handleToggleNotification(song)}
+														aria-label='Toggle notification'
 													>
 														{isNotificationEnabled ? <BellOff className='h-4 w-4' /> : <Bell className='h-4 w-4' />}
 													</Button>

@@ -11,6 +11,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { axiosInstance } from "@/lib/axios";
+import { buildArtistProfileHref } from "@/lib/artistProfile";
 import { buildSongDetailHref, getSongFromDetailParams } from "@/lib/songDetail";
 import { ensureResolvableSong, searchUnifiedSongs } from "@/lib/ytMusic";
 import { usePlayerStore } from "@/stores/usePlayerStore";
@@ -245,7 +246,9 @@ const SongDetailPage = () => {
 										Song Detail
 									</div>
 									<h1 className='text-4xl font-semibold tracking-tight text-white sm:text-5xl'>{song.title}</h1>
-									<p className='mt-3 text-lg text-zinc-300'>{song.artist}</p>
+									<Link to={buildArtistProfileHref(song.artist)} className='mt-3 inline-block text-lg text-zinc-300 transition hover:text-sky-300'>
+										{song.artist}
+									</Link>
 
 									<div className='mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4'>
 										<div className='rounded-2xl border border-white/10 bg-black/20 p-4'>
@@ -358,7 +361,9 @@ const SongDetailPage = () => {
 											<div className='min-w-0 flex-1'>
 												<Link to={buildSongDetailHref(candidate)} state={{ song: candidate }} className='block'>
 													<h3 className='truncate text-lg font-semibold text-white transition hover:text-emerald-300'>{candidate.title}</h3>
-													<p className='truncate text-sm text-zinc-400'>{candidate.artist}</p>
+													<Link to={buildArtistProfileHref(candidate.artist)} className='block truncate text-sm text-zinc-400 transition hover:text-sky-300'>
+														{candidate.artist}
+													</Link>
 												</Link>
 												<p className='mt-2 text-xs uppercase tracking-[0.18em] text-zinc-500'>
 													{candidate.genre || "Unknown"} | {formatSource(candidate)}

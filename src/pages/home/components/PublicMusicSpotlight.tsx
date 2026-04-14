@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { buildArtistProfileHref } from "@/lib/artistProfile";
 import { PublicMusicAlbumSpotlight, PublicMusicArtistSpotlight } from "@/types";
 import { ArrowUpRight, Mic2, Radio, LibraryBig } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -39,7 +40,9 @@ const PublicMusicSpotlight = ({ artists, albums }: PublicMusicSpotlightProps) =>
 							<div className='flex items-center gap-3'>
 								<img src={artist.imageUrl} alt={artist.name} className='h-14 w-14 rounded-2xl object-cover ring-1 ring-white/10' />
 								<div className='min-w-0 flex-1'>
-									<p className='truncate text-lg font-semibold text-white'>{artist.name}</p>
+									<Link to={buildArtistProfileHref(artist.name)} className='block truncate text-lg font-semibold text-white transition hover:text-sky-300'>
+										{artist.name}
+									</Link>
 									<p className='text-xs uppercase tracking-[0.18em] text-zinc-500'>
 										{artist.songCount} songs | {artist.albumCount} albums
 									</p>

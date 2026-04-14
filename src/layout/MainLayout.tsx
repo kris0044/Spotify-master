@@ -1,6 +1,6 @@
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Outlet } from "react-router-dom";
-import LeftSidebar from "./components/LeftSidebar";
+import LeftSidebar, { MobileBottomNav } from "./components/LeftSidebar";
 import FriendsActivity from "./components/FriendsActivity";
 import AudioPlayer from "./components/AudioPlayer";
 import YouTubePlayer from "./components/YouTubePlayer";
@@ -25,34 +25,37 @@ const MainLayout = () => {
 
 	return (
 		<div className='h-screen bg-black text-white flex flex-col'>
-			<ResizablePanelGroup direction='horizontal' className='flex-1 flex h-full overflow-hidden p-1.5 sm:p-2'>
-				<AudioPlayer />
-				<YouTubePlayer />
-				{/* left sidebar */}
-				<ResizablePanel defaultSize={isMobile ? 24 : 20} minSize={isMobile ? 18 : 10} maxSize={isMobile ? 32 : 30}>
-					<LeftSidebar />
-				</ResizablePanel>
+			<AudioPlayer />
+			<YouTubePlayer />
 
-				<ResizableHandle className='hidden md:block w-2 bg-black rounded-lg transition-colors' />
+			{isMobile ? (
+				<div className='flex-1 overflow-hidden p-1.5'>
+					<div className='h-full overflow-hidden rounded-xl'>
+						<Outlet />
+					</div>
+				</div>
+			) : (
+				<ResizablePanelGroup direction='horizontal' className='flex-1 flex h-full overflow-hidden p-1.5 sm:p-2'>
+					<ResizablePanel defaultSize={20} minSize={10} maxSize={30}>
+						<LeftSidebar />
+					</ResizablePanel>
 
-				{/* Main content */}
-				<ResizablePanel defaultSize={isMobile ? 76 : 60} minSize={isMobile ? 68 : 40}>
-					<Outlet />
-				</ResizablePanel>
+					<ResizableHandle className='hidden md:block w-2 bg-black rounded-lg transition-colors' />
 
-				{!isMobile && (
-					<>
-						<ResizableHandle className='w-2 bg-black rounded-lg transition-colors' />
+					<ResizablePanel defaultSize={60} minSize={40}>
+						<Outlet />
+					</ResizablePanel>
 
-						{/* right sidebar */}
-						<ResizablePanel defaultSize={20} minSize={0} maxSize={25} collapsedSize={0}>
-							<FriendsActivity />
-						</ResizablePanel>
-					</>
-				)}
-			</ResizablePanelGroup>
+					<ResizableHandle className='w-2 bg-black rounded-lg transition-colors' />
+
+					<ResizablePanel defaultSize={20} minSize={0} maxSize={25} collapsedSize={0}>
+						<FriendsActivity />
+					</ResizablePanel>
+				</ResizablePanelGroup>
+			)}
 
 			{!isPublicMusicPage && <PlaybackControls />}
+			{isMobile && <MobileBottomNav />}
 		</div>
 	);
 };

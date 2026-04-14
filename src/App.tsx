@@ -8,6 +8,8 @@ import AlbumPage from "./pages/album/AlbumPage";
 import AlbumsPage from "./pages/albums/AlbumsPage";
 import AuthCallbackPage from "./pages/auth-callback/AuthCallbackPage";
 import ArtistPage from "./pages/artist/ArtistPage";
+import AllArtistsPage from "./pages/artists/AllArtistsPage";
+import ArtistProfilePage from "./pages/artists/ArtistProfilePage";
 import ChatPage from "./pages/chat/ChatPage";
 import CommunityPage from "./pages/community/CommunityPage";
 import FavoritesPage from "./pages/favorites/FavoritesPage";
@@ -39,6 +41,8 @@ function App() {
 				<Route element={<MainLayout />}>
 					<Route path='/' element={<HomePage />} />
 					<Route path='/albums' element={<AlbumsPage />} />
+					<Route path='/artists' element={<AllArtistsPage />} />
+					<Route path='/artists/:artistSlug' element={<ArtistProfilePage />} />
 					<Route path='/songs' element={<AllSongsPage />} />
 					<Route path='/songs/:songId' element={<SongDetailPage />} />
 					<Route path='/chat' element={<ChatPage />} />

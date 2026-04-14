@@ -355,3 +355,21 @@ export interface PublicMusicHomeSections {
 	artists: PublicMusicArtistSpotlight[];
 	albums: PublicMusicAlbumSpotlight[];
 }
+
+export type PublicArtistRange = "today" | "week" | "month";
+export type PublicArtistScope = "global" | "regional";
+
+export interface PublicArtistCollection {
+	id: string;
+	name: string;
+	imageUrl: string;
+	songs: Song[];
+	topSong: Song | null;
+	songCount: number;
+	albumCount: number;
+}
+
+export interface PublicArtistDirectoryResponse {
+	global: Record<PublicArtistRange, PublicArtistCollection[]>;
+	regional: Record<PublicArtistRange, PublicArtistCollection[]>;
+}

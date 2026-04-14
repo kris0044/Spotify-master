@@ -15,9 +15,9 @@ const Topbar = () => {
 
 	return (
 		<div className='sticky top-0 z-20 border-b border-white/10 bg-zinc-950/70 px-3 py-3 sm:px-4 sm:py-4 backdrop-blur-xl'>
-			<div className='flex items-center justify-between gap-4'>
+			<div className='flex items-center justify-between gap-3 sm:gap-4'>
 				<div className='flex min-w-0 items-center gap-2 sm:gap-3'>
-					<Link to='/' className='flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-2 transition hover:bg-white/10 sm:gap-3 sm:px-3'>
+					<Link to='/' className='flex min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-2 transition hover:bg-white/10 sm:gap-3 sm:px-3'>
 						<div className='flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#34d399,#22c55e,#0f172a)] shadow-[0_10px_30px_rgba(16,185,129,0.35)] sm:h-9 sm:w-9'>
 							<img src='/spotify.png' className='size-5' alt='Spotify logo' />
 						</div>
@@ -29,13 +29,13 @@ const Topbar = () => {
 
 				</div>
 
-				<div className='flex items-center gap-2 sm:gap-3'>
+				<div className='flex shrink-0 items-center gap-2 sm:gap-3'>
 					{isAdmin && (
 						<Link
 							to='/admin'
 							className={cn(
 								buttonVariants({ variant: "outline" }),
-								"border-white/10 bg-white/5 px-2.5 text-zinc-100 hover:bg-white/10 sm:px-4"
+								"hidden border-white/10 bg-white/5 px-2.5 text-zinc-100 hover:bg-white/10 sm:inline-flex sm:px-4"
 							)}
 						>
 							<LayoutDashboardIcon className='size-4' />
@@ -48,7 +48,7 @@ const Topbar = () => {
 							<>
 								<Link
 									to='/login'
-									className={cn(buttonVariants({ variant: "ghost" }), "px-2.5 text-zinc-200 hover:bg-white/10 hover:text-white sm:px-4")}
+									className={cn(buttonVariants({ variant: "ghost" }), "px-2 text-zinc-200 hover:bg-white/10 hover:text-white sm:px-4")}
 								>
 									Login
 								</Link>
@@ -56,7 +56,7 @@ const Topbar = () => {
 									to='/signup'
 									className={cn(
 										buttonVariants({ variant: "secondary" }),
-										"bg-white px-2.5 text-black hover:bg-zinc-100 sm:px-4"
+										"bg-white px-2 text-black hover:bg-zinc-100 sm:px-4"
 									)}
 								>
 									Sign up

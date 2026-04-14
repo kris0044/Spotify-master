@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import PlayButton from "./PlayButton";
 import SectionGridSkeleton from "./SectionGridSkeleton";
 import { buildSongDetailHref } from "@/lib/songDetail";
+import { buildArtistProfileHref } from "@/lib/artistProfile";
 
 type SectionGridProps = {
 	title: string;
@@ -82,7 +83,9 @@ const SectionGrid = ({ songs, title, isLoading }: SectionGridProps) => {
 						<div className='space-y-2'>
 							<Link to={buildSongDetailHref(song)} state={{ song }} className='block'>
 								<h3 className='truncate text-lg font-semibold text-white transition group-hover:text-emerald-300'>{song.title}</h3>
-								<p className='truncate text-sm text-zinc-400'>{song.artist}</p>
+							</Link>
+							<Link to={buildArtistProfileHref(song.artist)} className='block truncate text-sm text-zinc-400 transition hover:text-sky-300'>
+								{song.artist}
 							</Link>
 						</div>
 					</div>
