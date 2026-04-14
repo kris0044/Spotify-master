@@ -7,7 +7,7 @@ import { buildSongDetailHref } from "@/lib/songDetail";
 import { ensureResolvableSong, filterSongsByArtistName, searchUnifiedSongs } from "@/lib/ytMusic";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import type { Song } from "@/types";
-import { AudioLines, Disc3, Loader2, Music2, Play, SearchCode, Users } from "lucide-react";
+import { AudioLines, Loader2, Play, SearchCode, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation, useParams } from "react-router-dom";
