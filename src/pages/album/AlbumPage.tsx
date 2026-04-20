@@ -1,10 +1,12 @@
+import { axiosInstance } from "@/lib/axios";
+import { fetchPublicAlbumById, isPublicAlbumId } from "@/lib/publicGenres";
 import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlayerStore } from "@/stores/usePlayerStore";
+import { Album } from "@/types";
 import { ArrowLeft, Clock, Disc3, Pause, Play } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 export const formatDuration = (seconds: number) => {
@@ -15,14 +17,48 @@ export const formatDuration = (seconds: number) => {
 
 const AlbumPage = () => {
 	const { albumId } = useParams();
-	const { fetchAlbumById, currentAlbum, isLoading } = useMusicStore();
 	const { currentSong, isPlaying, playAlbum, togglePlay } = usePlayerStore();
+	const [currentAlbum, setCurrentAlbum] = useState<Album | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
-		if (albumId) {
-			void fetchAlbumById(albumId);
-		}
-	}, [fetchAlbumById, albumId]);
+		let isMounted = true;
+
+		const loadAlbum = async () => {
+			if (!albumId) {
+				setCurrentAlbum(null);
+				setIsLoading(false);
+				return;
+			}
+
+			setIsLoading(true);
+
+			try {
+				if (isPublicAlbumId(albumId)) {
+					const album = await fetchPublicAlbumById(albumId);
+					if (!isMounted) return;
+					setCurrentAlbum(album);
+				} else {
+					const response = await axiosInstance.get(`/albums/${albumId}`);
+					if (!isMounted) return;
+					setCurrentAlbum(response.data);
+				}
+			} catch {
+				if (!isMounted) return;
+				setCurrentAlbum(null);
+			} finally {
+				if (isMounted) {
+					setIsLoading(false);
+				}
+			}
+		};
+
+		void loadAlbum();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [albumId]);
 
 	const handlePlayAlbum = () => {
 		if (!currentAlbum || currentAlbum.songs.length === 0) {

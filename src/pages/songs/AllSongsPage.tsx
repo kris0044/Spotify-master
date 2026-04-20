@@ -9,27 +9,40 @@ import { AudioLines, Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import SectionGrid from "../home/components/SectionGrid";
 
+const INPUT_DEBOUNCE_MS = 350;
+
 const AllSongsPage = () => {
 	const { fetchAllSongs, allSongs, isLoading, hasMoreSongs } = useMusicStore();
 	const [offset, setOffset] = useState(0);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [genreQuery, setGenreQuery] = useState("");
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+	const [debouncedGenreQuery, setDebouncedGenreQuery] = useState("");
 	const [mixedResults, setMixedResults] = useState<Song[]>([]);
 	const [isSearching, setIsSearching] = useState(false);
 	const limit = 10;
 
 	useEffect(() => {
-		if (searchQuery.trim()) {
+		const timeoutId = window.setTimeout(() => {
+			setDebouncedSearchQuery(searchQuery.trim());
+			setDebouncedGenreQuery(genreQuery.trim());
+		}, INPUT_DEBOUNCE_MS);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [genreQuery, searchQuery]);
+
+	useEffect(() => {
+		if (debouncedSearchQuery) {
 			return;
 		}
-		void fetchAllSongs(limit, offset, searchQuery, genreQuery);
-	}, [fetchAllSongs, offset, searchQuery, genreQuery]);
+		void fetchAllSongs(limit, offset, debouncedSearchQuery, debouncedGenreQuery);
+	}, [debouncedGenreQuery, debouncedSearchQuery, fetchAllSongs, offset]);
 
 	useEffect(() => {
 		let isMounted = true;
 
 		const loadMixedResults = async () => {
-			const trimmedQuery = searchQuery.trim();
+			const trimmedQuery = debouncedSearchQuery;
 			if (!trimmedQuery) {
 				setMixedResults([]);
 				setIsSearching(false);
@@ -39,7 +52,7 @@ const AllSongsPage = () => {
 			setIsSearching(true);
 
 			try {
-				const results = await searchUnifiedSongs(trimmedQuery, genreQuery, 24);
+				const results = await searchUnifiedSongs(trimmedQuery, debouncedGenreQuery, 18);
 				if (!isMounted) return;
 				setMixedResults(results);
 			} catch {
@@ -57,7 +70,7 @@ const AllSongsPage = () => {
 		return () => {
 			isMounted = false;
 		};
-	}, [genreQuery, searchQuery]);
+	}, [debouncedGenreQuery, debouncedSearchQuery]);
 
 	const handleLoadMore = () => {
 		if (!isLoading && hasMoreSongs) {

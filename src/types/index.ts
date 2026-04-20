@@ -27,8 +27,10 @@ export interface Album {
 	imageUrl: string;
 	releaseYear: number;
 	songs: Song[];
+	trackCount?: number;
 	isApproved?: boolean;
 	uploadedBy?: string | User;
+	source?: string;
 }
 
 export interface Stats {

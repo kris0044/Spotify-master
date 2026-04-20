@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useMusicStore } from "@/stores/useMusicStore";
 import { usePlaylistStore } from "@/stores/usePlaylistStore";
 import { SignedIn } from "@clerk/clerk-react";
-import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History, MessagesSquare, Bell, Disc3, Youtube, Trophy, Users, Ellipsis } from "lucide-react";
+import { HomeIcon, Library, MessageCircle, Heart, Music2, User, Mic, History, MessagesSquare, Bell, Disc3, Youtube, Trophy, Users, Ellipsis, Tags } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -26,6 +26,7 @@ const sharedSignedInNav = [
 	{ to: "/history", label: "History", icon: History },
 	{ to: "/publicmusic", label: "Public Music", icon: Youtube },
 	{ to: "/publicmusic/top100", label: "Top 100", icon: Trophy },
+	{ to: "/genres", label: "Genres", icon: Tags },
 	{ to: "/artists", label: "Artists", icon: Users },
 	{ to: "/albums", label: "Albums", icon: Disc3 },
 	{ to: "/playlists", label: "Playlists", icon: Music2 },
@@ -145,6 +146,18 @@ const LeftSidebar = () => {
 							>
 								<Trophy className='mr-2 size-5' />
 								<span className='hidden md:inline'>Top 100</span>
+							</Link>
+							<Link
+								to={"/genres"}
+								className={cn(
+									buttonVariants({
+										variant: "ghost",
+										className: "w-full justify-center px-2 text-white hover:bg-zinc-800 md:justify-start md:px-4",
+									})
+								)}
+							>
+								<Tags className='mr-2 size-5' />
+								<span className='hidden md:inline'>Genres</span>
 							</Link>
 							<Link
 								to={"/artists"}
@@ -283,6 +296,7 @@ export const MobileBottomNav = () => {
 	const extraNav = [
 		{ to: "/publicmusic", label: "Public Music", icon: Youtube },
 		{ to: "/publicmusic/top100", label: "Top 100", icon: Trophy },
+		{ to: "/genres", label: "Genres", icon: Tags },
 		{ to: "/albums", label: "Albums", icon: Disc3 },
 		{ to: "/favorites", label: "Favorites", icon: Heart },
 		{ to: "/history", label: "History", icon: History },

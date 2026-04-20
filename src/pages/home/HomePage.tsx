@@ -24,6 +24,7 @@ const emptyPublicSections: PublicMusicHomeSections = {
 	artists: [],
 	albums: [],
 };
+const INPUT_DEBOUNCE_MS = 350;
 
 const normalizeSearchValue = (value?: string | null) => (value || "").trim().toLowerCase();
 
@@ -71,6 +72,7 @@ const HomePage = () => {
 	const { isSignedIn } = useAuth();
 	const { initializeQueue } = usePlayerStore();
 	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 	const [publicSections, setPublicSections] = useState<PublicMusicHomeSections>(emptyPublicSections);
 	const [searchResults, setSearchResults] = useState<Song[]>([]);
 
@@ -105,10 +107,18 @@ const HomePage = () => {
 	}, []);
 
 	useEffect(() => {
+		const timeoutId = window.setTimeout(() => {
+			setDebouncedSearchQuery(searchQuery);
+		}, INPUT_DEBOUNCE_MS);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [searchQuery]);
+
+	useEffect(() => {
 		let isMounted = true;
 
 		const loadSearchResults = async () => {
-			const trimmedQuery = searchQuery.trim();
+			const trimmedQuery = debouncedSearchQuery.trim();
 			if (!trimmedQuery) {
 				setSearchResults([]);
 				return;
@@ -129,7 +139,7 @@ const HomePage = () => {
 		return () => {
 			isMounted = false;
 		};
-	}, [searchQuery]);
+	}, [debouncedSearchQuery]);
 
 	const featuredFeed = useMemo(
 		() => mergeUniqueSongs([...featuredSongs, ...publicSections.featuredSongs]),

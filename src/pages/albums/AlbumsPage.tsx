@@ -1,24 +1,93 @@
+import { fetchPublicAlbums } from "@/lib/publicGenres";
 import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useMusicStore } from "@/stores/useMusicStore";
+import { Album } from "@/types";
 import { Album as AlbumIcon, Disc3, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+
+const INPUT_DEBOUNCE_MS = 350;
 
 const AlbumsPage = () => {
 	const { albums, fetchAlbumsByGenre, isLoading } = useMusicStore();
-	const [searchQuery, setSearchQuery] = useState("");
-	const [genreQuery, setGenreQuery] = useState("");
+	const [searchParams, setSearchParams] = useSearchParams();
+	const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+	const [genreQuery, setGenreQuery] = useState(searchParams.get("genre") || "");
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchParams.get("search") || "");
+	const [debouncedGenreQuery, setDebouncedGenreQuery] = useState(searchParams.get("genre") || "");
+	const [publicAlbums, setPublicAlbums] = useState<Album[]>([]);
+	const [isPublicLoading, setIsPublicLoading] = useState(false);
 
 	useEffect(() => {
-		void fetchAlbumsByGenre(genreQuery, searchQuery);
-	}, [fetchAlbumsByGenre, genreQuery, searchQuery]);
+		setSearchQuery(searchParams.get("search") || "");
+		setGenreQuery(searchParams.get("genre") || "");
+		setDebouncedSearchQuery(searchParams.get("search") || "");
+		setDebouncedGenreQuery(searchParams.get("genre") || "");
+	}, [searchParams]);
+
+	useEffect(() => {
+		const timeoutId = window.setTimeout(() => {
+			setDebouncedSearchQuery(searchQuery.trim());
+			setDebouncedGenreQuery(genreQuery.trim());
+		}, INPUT_DEBOUNCE_MS);
+
+		return () => window.clearTimeout(timeoutId);
+	}, [genreQuery, searchQuery]);
+
+	useEffect(() => {
+		void fetchAlbumsByGenre(debouncedGenreQuery, debouncedSearchQuery);
+	}, [debouncedGenreQuery, debouncedSearchQuery, fetchAlbumsByGenre]);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const loadPublicAlbums = async () => {
+			setIsPublicLoading(true);
+
+			try {
+				const results = await fetchPublicAlbums(debouncedGenreQuery, debouncedSearchQuery, 8);
+				if (!isMounted) return;
+				setPublicAlbums(results);
+			} catch {
+				if (!isMounted) return;
+				setPublicAlbums([]);
+			} finally {
+				if (isMounted) {
+					setIsPublicLoading(false);
+				}
+			}
+		};
+
+		void loadPublicAlbums();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [debouncedGenreQuery, debouncedSearchQuery]);
+
+	useEffect(() => {
+		const nextParams = new URLSearchParams();
+		if (debouncedSearchQuery) nextParams.set("search", debouncedSearchQuery);
+		if (debouncedGenreQuery) nextParams.set("genre", debouncedGenreQuery);
+
+		if (nextParams.toString() !== searchParams.toString()) {
+			setSearchParams(nextParams, { replace: true });
+		}
+	}, [debouncedGenreQuery, debouncedSearchQuery, searchParams, setSearchParams]);
 
 	const filteredAlbums = useMemo(() => {
-		return albums;
-	}, [albums, searchQuery]);
+		const merged = [...albums, ...publicAlbums];
+		const seen = new Set<string>();
+		return merged.filter((album) => {
+			const key = album._id;
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		});
+	}, [albums, publicAlbums]);
 
 	return (
 		<main className='rounded-md overflow-hidden h-full bg-gradient-to-b from-zinc-900 via-zinc-900 to-black'>
@@ -35,10 +104,10 @@ const AlbumsPage = () => {
 								<h1 className='text-3xl font-semibold tracking-tight text-white sm:text-4xl'>
 									Browse the full album collection.
 								</h1>
-								<p className='mt-3 max-w-xl text-sm leading-6 text-zinc-300'>
-									Open any album to see its tracks, cover art, release year, and start listening from the detail page.
-								</p>
-							</div>
+							<p className='mt-3 max-w-xl text-sm leading-6 text-zinc-300'>
+								Open any album to see its tracks, cover art, release year, and start listening from the detail page.
+							</p>
+						</div>
 							<div className='grid w-full max-w-2xl gap-3 md:grid-cols-2'>
 								<div className='relative'>
 									<Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500' />
@@ -68,7 +137,7 @@ const AlbumsPage = () => {
 						</div>
 					</div>
 
-					{isLoading ? (
+					{isLoading || isPublicLoading ? (
 						<div className='mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4'>
 							{Array.from({ length: 8 }).map((_, index) => (
 								<div key={index} className='animate-pulse rounded-3xl border border-white/10 bg-zinc-900/70 p-4'>
@@ -102,7 +171,7 @@ const AlbumsPage = () => {
 											<p className='mt-1 truncate text-sm text-zinc-400'>{album.artist}</p>
 											<div className='mt-3 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-zinc-500'>
 												<span>{album.releaseYear}</span>
-												<span>{album.songs?.length || 0} tracks</span>
+												<span>{album.trackCount || album.songs?.length || 0} tracks</span>
 											</div>
 										</div>
 									</Link>

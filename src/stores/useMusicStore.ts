@@ -3,6 +3,8 @@ import { Album, Song, Stats } from "@/types";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 
+const albumQueryCache = new Map<string, Album[]>();
+
 interface MusicStore {
 	songs: Song[];
 	albums: Album[];
@@ -164,7 +166,15 @@ export const useMusicStore = create<MusicStore>((set) => ({
 			const queryParams = new URLSearchParams();
 			if (genre) queryParams.append("genre", genre);
 			if (search) queryParams.append("search", search);
+			const cacheKey = queryParams.toString();
+			const cachedAlbums = albumQueryCache.get(cacheKey);
+			if (cachedAlbums) {
+				set({ albums: cachedAlbums, isLoading: false });
+				return;
+			}
+
 			const response = await axiosInstance.get(`/albums${queryParams.toString() ? `?${queryParams.toString()}` : ""}`);
+			albumQueryCache.set(cacheKey, response.data);
 			set({ albums: response.data });
 		} catch (error: any) {
 			set({ error: error.response?.data?.message || error.message });

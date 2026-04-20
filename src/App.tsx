@@ -13,6 +13,7 @@ import ArtistProfilePage from "./pages/artists/ArtistProfilePage";
 import ChatPage from "./pages/chat/ChatPage";
 import CommunityPage from "./pages/community/CommunityPage";
 import FavoritesPage from "./pages/favorites/FavoritesPage";
+import GenresPage from "./pages/genres/GenresPage";
 import ListeningHistoryPage from "./pages/history/ListeningHistoryPage";
 import HomePage from "./pages/home/HomePage";
 import LoginPage from "./pages/login/LoginPage";
@@ -41,6 +42,7 @@ function App() {
 				<Route element={<MainLayout />}>
 					<Route path='/' element={<HomePage />} />
 					<Route path='/albums' element={<AlbumsPage />} />
+					<Route path='/genres' element={<GenresPage />} />
 					<Route path='/artists' element={<AllArtistsPage />} />
 					<Route path='/artists/:artistSlug' element={<ArtistProfilePage />} />
 					<Route path='/songs' element={<AllSongsPage />} />
