@@ -1,5 +1,6 @@
 import { axiosInstance } from "@/lib/axios";
 import type {
+	Album,
 	PublicArtistCollection,
 	PublicArtistDirectoryResponse,
 	PublicMusicAlbumSpotlight,
@@ -19,9 +20,13 @@ const PUBLIC_CACHE_TTL_MS = 5 * 60 * 1000;
 const publicSearchCache = new Map<string, { value: PublicMusicSong[]; expiresAt: number }>();
 const publicChartCache = new Map<string, { value: PublicMusicChartResponse; expiresAt: number }>();
 const unifiedSearchCache = new Map<string, { value: Song[]; expiresAt: number }>();
+const publicAlbumSearchCache = new Map<string, { value: Album[]; expiresAt: number }>();
+const publicAlbumDetailCache = new Map<string, { value: Album | null; expiresAt: number }>();
 const inFlightPublicSearches = new Map<string, Promise<PublicMusicSong[]>>();
 const inFlightPublicCharts = new Map<string, Promise<PublicMusicChartResponse>>();
 const inFlightUnifiedSearches = new Map<string, Promise<Song[]>>();
+const inFlightPublicAlbumSearches = new Map<string, Promise<Album[]>>();
+const inFlightPublicAlbumDetails = new Map<string, Promise<Album | null>>();
 let publicHomeSectionsCache: { value: PublicMusicHomeSections; expiresAt: number } | null = null;
 let publicHomeSectionsPromise: Promise<PublicMusicHomeSections> | null = null;
 let publicArtistDirectoryCache: { value: PublicArtistDirectoryResponse; expiresAt: number } | null = null;
@@ -108,6 +113,18 @@ export const mapPublicMusicSongToSong = (song: PublicMusicSong, section = "publi
 	externalVideoId: song.videoId,
 	playbackUrl: `${PUBLIC_WATCH_URL}${song.videoId}`,
 });
+
+const PUBLIC_ALBUM_ID_PREFIX = "publicmusic-album-";
+
+const buildPublicAlbumId = (albumId: string) => `${PUBLIC_ALBUM_ID_PREFIX}${encodeURIComponent(albumId.trim())}`;
+
+const parsePublicAlbumId = (albumId: string) => {
+	if (!albumId.startsWith(PUBLIC_ALBUM_ID_PREFIX)) return null;
+	const encodedValue = albumId.slice(PUBLIC_ALBUM_ID_PREFIX.length);
+	return encodedValue ? decodeURIComponent(encodedValue) : null;
+};
+
+export const isPublicMusicAlbumId = (albumId: string) => albumId.startsWith(PUBLIC_ALBUM_ID_PREFIX);
 
 export const isTemporaryPublicSongId = (songId: string) => PUBLIC_TEMP_ID_PREFIXES.some((prefix) => songId.startsWith(prefix));
 
@@ -306,6 +323,98 @@ const buildAlbumSpotlights = (songs: Song[]): PublicMusicAlbumSpotlight[] => {
 	return Array.from(albumMap.values())
 		.sort((left, right) => right.songs.length - left.songs.length)
 		.slice(0, PUBLIC_HOME_SPOTLIGHT_LIMIT);
+};
+
+type PublicMusicAlbumResponse = {
+	albumId: string;
+	title: string;
+	artist: string;
+	releaseYear: number;
+	imageUrl: string;
+	trackCount: number;
+	songs: PublicMusicSong[];
+};
+
+const mapPublicMusicAlbumResponse = (album: PublicMusicAlbumResponse, section = "albums-public"): Album => ({
+	_id: buildPublicAlbumId(album.albumId),
+	title: album.title,
+	artist: album.artist,
+	genre: "Public Music",
+	imageUrl: album.imageUrl,
+	releaseYear: album.releaseYear || 0,
+	songs: (album.songs || []).map((song) => mapPublicMusicSongToSong(song, `${section}-${album.albumId}`)),
+	trackCount: album.trackCount || album.songs?.length || 0,
+	source: "youtube_music",
+	createdAt: PUBLIC_SONG_DATE,
+});
+
+export const fetchPublicMusicAlbums = async (query = "", limit = 12): Promise<Album[]> => {
+	const trimmedQuery = query.trim() || "top albums";
+	const cacheKey = `${trimmedQuery.toLowerCase()}::${limit}`;
+	const cachedAlbums = getValidCachedValue(publicAlbumSearchCache.get(cacheKey));
+	if (cachedAlbums) {
+		return cachedAlbums;
+	}
+
+	const inFlightSearch = inFlightPublicAlbumSearches.get(cacheKey);
+	if (inFlightSearch) {
+		return inFlightSearch;
+	}
+
+	const request = axiosInstance
+		.get("/publicmusic/albums", {
+			params: {
+				q: trimmedQuery,
+				limit,
+			},
+		})
+		.then((response) => (response.data.albums || []).map((album: PublicMusicAlbumResponse) => mapPublicMusicAlbumResponse(album)))
+		.then((albums) => {
+			publicAlbumSearchCache.set(cacheKey, { value: albums, expiresAt: Date.now() + PUBLIC_CACHE_TTL_MS });
+			return albums;
+		})
+		.finally(() => {
+			inFlightPublicAlbumSearches.delete(cacheKey);
+		});
+
+	inFlightPublicAlbumSearches.set(cacheKey, request);
+	return request;
+};
+
+export const fetchPublicMusicAlbumById = async (albumId: string): Promise<Album | null> => {
+	const cachedAlbum = getValidCachedValue(publicAlbumDetailCache.get(albumId));
+	if (cachedAlbum !== null) {
+		return cachedAlbum;
+	}
+
+	const cachedEntry = publicAlbumDetailCache.get(albumId);
+	if (cachedEntry && cachedEntry.expiresAt >= Date.now() && cachedEntry.value === null) {
+		return null;
+	}
+
+	const inFlightAlbum = inFlightPublicAlbumDetails.get(albumId);
+	if (inFlightAlbum) {
+		return inFlightAlbum;
+	}
+
+	const publicAlbumId = parsePublicAlbumId(albumId);
+	if (!publicAlbumId) {
+		return null;
+	}
+
+	const request = axiosInstance
+		.get(`/publicmusic/albums/${encodeURIComponent(publicAlbumId)}`)
+		.then((response) => {
+			const album = response.data ? mapPublicMusicAlbumResponse(response.data, "album-public-detail") : null;
+			publicAlbumDetailCache.set(albumId, { value: album, expiresAt: Date.now() + PUBLIC_CACHE_TTL_MS });
+			return album;
+		})
+		.finally(() => {
+			inFlightPublicAlbumDetails.delete(albumId);
+		});
+
+	inFlightPublicAlbumDetails.set(albumId, request);
+	return request;
 };
 
 export const fetchPublicMusicHomeSections = async (): Promise<PublicMusicHomeSections> => {

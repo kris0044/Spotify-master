@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
-import { fetchPublicAlbumById, isPublicAlbumId } from "@/lib/publicGenres";
+import { fetchPublicMusicAlbumById, isPublicMusicAlbumId } from "@/lib/ytMusic";
 import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -34,10 +34,10 @@ const AlbumPage = () => {
 			setIsLoading(true);
 
 			try {
-				if (isPublicAlbumId(albumId)) {
-					const album = await fetchPublicAlbumById(albumId);
+				if (isPublicMusicAlbumId(albumId)) {
+					const publicAlbum = await fetchPublicMusicAlbumById(albumId);
 					if (!isMounted) return;
-					setCurrentAlbum(album);
+					setCurrentAlbum(publicAlbum);
 				} else {
 					const response = await axiosInstance.get(`/albums/${albumId}`);
 					if (!isMounted) return;
@@ -71,7 +71,11 @@ const AlbumPage = () => {
 			return;
 		}
 
-		playAlbum(currentAlbum.songs, 0);
+		playAlbum(currentAlbum.songs, 0, {
+			type: "album",
+			id: currentAlbum._id,
+			title: currentAlbum.title,
+		});
 	};
 
 	const handlePlaySong = (index: number) => {
@@ -79,7 +83,11 @@ const AlbumPage = () => {
 			return;
 		}
 
-		playAlbum(currentAlbum.songs, index);
+		playAlbum(currentAlbum.songs, index, {
+			type: "album",
+			id: currentAlbum._id,
+			title: currentAlbum.title,
+		});
 	};
 
 	if (isLoading) {

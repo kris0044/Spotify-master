@@ -104,7 +104,11 @@ const PlaylistDetailPage = () => {
 
 	const handlePlayPlaylist = () => {
 		if (currentPlaylist && currentPlaylist.songs.length > 0) {
-			playAlbum(currentPlaylist.songs, 0);
+			playAlbum(currentPlaylist.songs, 0, {
+				type: "playlist",
+				id: currentPlaylist._id,
+				title: currentPlaylist.name,
+			});
 		}
 	};
 
@@ -120,7 +124,11 @@ const PlaylistDetailPage = () => {
 			return;
 		}
 
-		playAlbum(playlistSongs, index);
+		playAlbum(playlistSongs, index, {
+			type: "playlist",
+			id: currentPlaylist._id,
+			title: currentPlaylist.name,
+		});
 	};
 
 	const handleDeletePlaylist = async () => {

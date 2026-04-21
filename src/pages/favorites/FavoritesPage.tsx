@@ -17,7 +17,10 @@ const FavoritesPage = () => {
 
 	const handlePlayFavorites = () => {
 		if (favorites.length > 0) {
-			playAlbum(favorites, 0);
+			playAlbum(favorites, 0, {
+				type: "favorites",
+				title: "Your Favorites",
+			});
 		}
 	};
 

@@ -1,4 +1,4 @@
-import { fetchPublicAlbums } from "@/lib/publicGenres";
+import { fetchPublicMusicAlbums } from "@/lib/ytMusic";
 import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,8 @@ const AlbumsPage = () => {
 			setIsPublicLoading(true);
 
 			try {
-				const results = await fetchPublicAlbums(debouncedGenreQuery, debouncedSearchQuery, 8);
+				const query = [debouncedGenreQuery, debouncedSearchQuery].filter(Boolean).join(" ").trim();
+				const results = await fetchPublicMusicAlbums(query, 8);
 				if (!isMounted) return;
 				setPublicAlbums(results);
 			} catch {
@@ -82,9 +83,8 @@ const AlbumsPage = () => {
 		const merged = [...albums, ...publicAlbums];
 		const seen = new Set<string>();
 		return merged.filter((album) => {
-			const key = album._id;
-			if (seen.has(key)) return false;
-			seen.add(key);
+			if (seen.has(album._id)) return false;
+			seen.add(album._id);
 			return true;
 		});
 	}, [albums, publicAlbums]);

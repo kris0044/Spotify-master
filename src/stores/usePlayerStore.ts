@@ -3,6 +3,7 @@ import { Song } from "@/types";
 import { useChatStore } from "./useChatStore";
 import { axiosInstance } from "@/lib/axios";
 import { ensureResolvableSong } from "@/lib/ytMusic";
+import { useRecommendationStore } from "./useRecommendationStore";
 import toast from "react-hot-toast";
 
 export const getPlaybackType = (song: Song | null) => {
@@ -12,6 +13,12 @@ export const getPlaybackType = (song: Song | null) => {
 	const playbackUrl = song.playbackUrl || song.audioUrl || "";
 	return playbackUrl.includes("youtube.com") || playbackUrl.includes("youtu.be") ? "youtube" : "local";
 };
+
+export interface PlaybackContext {
+	type: "album" | "playlist" | "favorites" | "recommendations" | "generic";
+	id?: string;
+	title?: string;
+}
 
 interface PlayerStore {
 	currentSong: Song | null;
@@ -23,9 +30,10 @@ interface PlayerStore {
 	playbackPosition: number;
 	playbackDuration: number;
 	pendingSeekTime: number | null;
+	activeContext: PlaybackContext | null;
 
 	initializeQueue: (songs: Song[]) => void;
-	playAlbum: (songs: Song[], startIndex?: number) => void;
+	playAlbum: (songs: Song[], startIndex?: number, context?: PlaybackContext | null) => void;
 	setCurrentSong: (song: Song | null) => void;
 	setPlaybackProgress: (position: number, duration?: number) => void;
 	resetPlaybackProgress: (duration?: number) => void;
@@ -69,6 +77,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 	playbackPosition: 0,
 	playbackDuration: 0,
 	pendingSeekTime: null,
+	activeContext: null,
 
 	initializeQueue: (songs) => {
 		set({
@@ -78,7 +87,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 		});
 	},
 
-	playAlbum: (songs, startIndex = 0) => {
+	playAlbum: (songs, startIndex = 0, context = null) => {
 		if (songs.length === 0) return;
 
 		const song = songs[startIndex];
@@ -91,6 +100,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 			isPlaying: true,
 			playbackPosition: 0,
 			playbackDuration: song.duration || 0,
+			activeContext: context,
 		});
 	},
 
@@ -173,6 +183,40 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 			return;
 		}
 
+		try {
+			const recommendationStore = useRecommendationStore.getState();
+			if (recommendationStore.recommendations.length === 0) {
+				await recommendationStore.fetchRecommendations();
+			}
+
+			const recommendations = useRecommendationStore.getState().recommendations;
+			if (recommendations.length > 0) {
+				const currentSongId = get().currentSong?._id;
+				const recommendationIndex = recommendations.findIndex((song) => song._id === currentSongId);
+				const fallbackIndex =
+					recommendationIndex >= 0 && recommendationIndex + 1 < recommendations.length
+						? recommendationIndex + 1
+						: recommendations.findIndex((song) => song._id !== currentSongId);
+
+				if (fallbackIndex >= 0) {
+					const nextRecommendation = recommendations[fallbackIndex];
+					updateActivity(nextRecommendation, true);
+					set({
+						queue: recommendations,
+						activeContext: { type: "recommendations", title: "Recommended For You" },
+						currentSong: nextRecommendation,
+						currentIndex: fallbackIndex,
+						isPlaying: true,
+						playbackPosition: 0,
+						playbackDuration: nextRecommendation.duration || 0,
+					});
+					return;
+				}
+			}
+		} catch (error) {
+			console.error("Failed to load recommendations for playback fallback:", error);
+		}
+
 		updateActivity(null, false);
 		set({ isPlaying: false, playbackPosition: 0, playbackDuration: 0 });
 	},
@@ -243,6 +287,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 	},
 
 	resetQueueState: () => {
-		set({ upNextQueue: [], isQueueOpen: false });
+		set({ upNextQueue: [], isQueueOpen: false, activeContext: null });
 	},
 }));

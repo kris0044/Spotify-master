@@ -2,7 +2,9 @@ import Topbar from "@/components/Topbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PUBLIC_GENRE_OPTIONS, fetchGenreSongs } from "@/lib/publicGenres";
+import { axiosInstance } from "@/lib/axios";
+import { PUBLIC_GENRE_OPTIONS } from "@/lib/publicGenres";
+import { mapPublicMusicSongToSong, mergeUniqueSongs, searchPublicMusicSongs } from "@/lib/ytMusic";
 import { cn } from "@/lib/utils";
 import { usePlayerStore } from "@/stores/usePlayerStore";
 import type { Song } from "@/types";
@@ -45,14 +47,38 @@ const GenresPage = () => {
 			setError("");
 
 			try {
-				const songResults = await fetchGenreSongs(activeGenre.query, debouncedSearchQuery, 12);
+				const queryParams = new URLSearchParams({
+					genre: activeGenre.query,
+					limit: "12",
+					offset: "0",
+				});
+
+				if (debouncedSearchQuery) {
+					queryParams.set("search", debouncedSearchQuery);
+				}
+
+				const publicQuery = [activeGenre.query, debouncedSearchQuery].filter(Boolean).join(" ").trim();
+				const [localResponse, publicSongs] = await Promise.allSettled([
+					axiosInstance.get<Song[]>(`/songs?${queryParams.toString()}`),
+					searchPublicMusicSongs(publicQuery),
+				]);
+
+				const localSongs = localResponse.status === "fulfilled" ? localResponse.value.data || [] : [];
+				const mappedPublicSongs =
+					publicSongs.status === "fulfilled"
+						? publicSongs.value.map((song) => ({
+								...mapPublicMusicSongToSong(song, "genre-public"),
+								genre: activeGenre.label,
+						  }))
+						: [];
+				const songResults = mergeUniqueSongs([...localSongs, ...mappedPublicSongs]).slice(0, 12);
 
 				if (!isMounted) return;
 				setSongs(songResults);
 			} catch {
 				if (!isMounted) return;
 				setSongs([]);
-				setError("Genre music could not be loaded from the public API right now.");
+				setError("Genre music could not be loaded right now.");
 			} finally {
 				if (isMounted) {
 					setIsLoading(false);
@@ -97,10 +123,10 @@ const GenresPage = () => {
 									Genres
 								</div>
 								<h1 className='mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-5xl'>
-									Explore songs and albums by genre from a public music API.
+									Explore full songs by genre from your library.
 								</h1>
 								<p className='mt-4 max-w-2xl text-sm leading-6 text-zinc-300'>
-									Pick a genre, narrow it with a search, then preview tracks filtered by that genre.
+									Pick a genre, narrow it with a search, then play full tracks filtered by that genre.
 								</p>
 
 								<form className='mt-6 flex flex-col gap-3 md:flex-row' onSubmit={handleSearchSubmit}>
@@ -144,7 +170,7 @@ const GenresPage = () => {
 										<div className='flex items-center gap-4'>
 											<img src={featuredSong.imageUrl} alt={featuredSong.title} className='h-24 w-24 rounded-[28px] object-cover ring-1 ring-white/10' />
 											<div className='min-w-0'>
-												<p className='text-xs uppercase tracking-[0.24em] text-zinc-400'>Featured preview</p>
+												<p className='text-xs uppercase tracking-[0.24em] text-zinc-400'>Featured song</p>
 												<h2 className='truncate text-2xl font-semibold text-white'>{featuredSong.title}</h2>
 												<p className='mt-2 truncate text-sm text-zinc-300'>{featuredSong.artist}</p>
 												<p className='mt-1 text-xs uppercase tracking-[0.18em] text-zinc-500'>
@@ -178,13 +204,13 @@ const GenresPage = () => {
 											) : (
 												<Play className='mr-2 h-4 w-4 fill-current' />
 											)}
-											Play Preview
+											Play Song
 										</Button>
 									</div>
 								) : (
 									<div className='flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 px-6 text-center'>
 										<Disc3 className='h-10 w-10 text-white/70' />
-										<p className='mt-4 text-lg font-medium text-white'>No preview tracks found.</p>
+										<p className='mt-4 text-lg font-medium text-white'>No songs found.</p>
 										<p className='mt-2 max-w-sm text-sm text-zinc-400'>Try another genre or a broader search term.</p>
 									</div>
 								)}
@@ -201,7 +227,7 @@ const GenresPage = () => {
 							<div>
 								<h2 className='text-xl font-semibold text-white'>Genre Songs</h2>
 								<p className='text-sm text-zinc-400'>
-									{searchQuery ? `Results for "${searchQuery}" inside ${activeGenre.label}.` : `Preview-ready songs for ${activeGenre.label}.`}
+									{searchQuery ? `Results for "${searchQuery}" inside ${activeGenre.label}.` : `Full songs for ${activeGenre.label}.`}
 								</p>
 							</div>
 						</div>

@@ -7,7 +7,16 @@ const AudioPlayer = () => {
 	const prevSongRef = useRef<string | null>(null);
 	const hasTrackedPlay = useRef<boolean>(false);
 
-	const { currentSong, isPlaying, playNext, setPlaybackProgress, resetPlaybackProgress } = usePlayerStore();
+	const {
+		currentSong,
+		isPlaying,
+		playNext,
+		playPrevious,
+		setPlaybackProgress,
+		resetPlaybackProgress,
+		playbackPosition,
+		playbackDuration,
+	} = usePlayerStore();
 
 	// handle play/pause logic
 	useEffect(() => {
@@ -111,6 +120,92 @@ const AudioPlayer = () => {
 		};
 	}, [currentSong, setPlaybackProgress]);
 
-	return <audio ref={audioRef} />;
+	useEffect(() => {
+		if (!("mediaSession" in navigator)) {
+			return;
+		}
+
+		if (!currentSong) {
+			navigator.mediaSession.metadata = null;
+			navigator.mediaSession.playbackState = "none";
+			return;
+		}
+
+		navigator.mediaSession.metadata = new MediaMetadata({
+			title: currentSong.title,
+			artist: currentSong.artist,
+			album: currentSong.albumId || "",
+			artwork: currentSong.imageUrl
+				? [
+					{ src: currentSong.imageUrl, sizes: "96x96", type: "image/png" },
+					{ src: currentSong.imageUrl, sizes: "128x128", type: "image/png" },
+					{ src: currentSong.imageUrl, sizes: "192x192", type: "image/png" },
+					{ src: currentSong.imageUrl, sizes: "256x256", type: "image/png" },
+					{ src: currentSong.imageUrl, sizes: "384x384", type: "image/png" },
+					{ src: currentSong.imageUrl, sizes: "512x512", type: "image/png" },
+				]
+				: [],
+		});
+		navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+
+		navigator.mediaSession.setActionHandler("play", () => {
+			if (!usePlayerStore.getState().isPlaying) {
+				usePlayerStore.getState().togglePlay();
+			}
+		});
+		navigator.mediaSession.setActionHandler("pause", () => {
+			if (usePlayerStore.getState().isPlaying) {
+				usePlayerStore.getState().togglePlay();
+			}
+		});
+		navigator.mediaSession.setActionHandler("nexttrack", () => {
+			void usePlayerStore.getState().playNext();
+		});
+		navigator.mediaSession.setActionHandler("previoustrack", () => {
+			usePlayerStore.getState().playPrevious();
+		});
+		navigator.mediaSession.setActionHandler("seekto", (details) => {
+			const seekTime = details.seekTime ?? 0;
+			const currentPlayerSong = usePlayerStore.getState().currentSong;
+			if (!currentPlayerSong) return;
+
+			if (getPlaybackType(currentPlayerSong) === "local" && audioRef.current) {
+				audioRef.current.currentTime = seekTime;
+				usePlayerStore.getState().setPlaybackProgress(
+					seekTime,
+					Number.isFinite(audioRef.current.duration) ? audioRef.current.duration : currentPlayerSong.duration || 0
+				);
+				return;
+			}
+
+			usePlayerStore.getState().requestSeek(seekTime);
+		});
+
+		return () => {
+			navigator.mediaSession.setActionHandler("play", null);
+			navigator.mediaSession.setActionHandler("pause", null);
+			navigator.mediaSession.setActionHandler("nexttrack", null);
+			navigator.mediaSession.setActionHandler("previoustrack", null);
+			navigator.mediaSession.setActionHandler("seekto", null);
+		};
+	}, [currentSong, isPlaying, playNext, playPrevious]);
+
+	useEffect(() => {
+		if (!("mediaSession" in navigator) || !currentSong) {
+			return;
+		}
+
+		try {
+			navigator.mediaSession.setPositionState({
+				duration: Math.max(playbackDuration || currentSong.duration || 0, 0),
+				playbackRate: 1,
+				position: Math.max(playbackPosition || 0, 0),
+			});
+		} catch {
+			// Some browsers reject position state updates for unsupported sources or missing duration.
+		}
+	}, [currentSong, playbackDuration, playbackPosition]);
+
+	return <audio ref={audioRef} preload='metadata' playsInline />;
 };
 export default AudioPlayer;

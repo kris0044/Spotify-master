@@ -36,9 +36,14 @@ const PlaylistsPage = () => {
 		setIsDialogOpen(false);
 	};
 
-	const handlePlayPlaylist = (songs: any[]) => {
+	const handlePlayPlaylist = (playlist: (typeof playlists)[number]) => {
+		const songs = playlist.songs;
 		if (songs.length > 0) {
-			playAlbum(songs, 0);
+			playAlbum(songs, 0, {
+				type: "playlist",
+				id: playlist._id,
+				title: playlist.name,
+			});
 		}
 	};
 
@@ -113,7 +118,7 @@ const PlaylistsPage = () => {
 										<Button
 											size='sm'
 											variant='ghost'
-											onClick={() => handlePlayPlaylist(playlist.songs)}
+											onClick={() => handlePlayPlaylist(playlist)}
 											disabled={playlist.songs.length === 0}
 										>
 											Play
